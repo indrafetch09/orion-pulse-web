@@ -13,15 +13,11 @@ const router = Router();
 
 router.post("/register", register);
 router.post("/login", login);
-router.get("/profile", authMiddleware as any, getProfile as any);
+router.get("/profile", authMiddleware, getProfile);
 
 // OAuth Device Flow endpoints
-router.post("/device/code", requestDeviceCode as any);
-router.post(
-  "/device/authorize",
-  authMiddleware as any,
-  authorizeDeviceCode as any,
-);
-router.post("/device/token", checkDeviceToken as any);
+router.post("/device/code", requestDeviceCode);
+router.post("/device/authorize", authMiddleware, authorizeDeviceCode);
+router.post("/device/token", checkDeviceToken);
 
 export default router;

@@ -1,22 +1,22 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
   remove,
   triggerScan,
   getLogs,
   clearLogs,
   submitAgentLogs,
-} from '../controllers/portController';
-import { authMiddleware } from '../middleware/authMiddleware';
+} from "../controllers/portController";
+import { authMiddleware } from "../middleware/authMiddleware";
 
 const router = Router();
 
 // Public / Agent authenticating route (no JWT required)
-router.post('/agent/logs', submitAgentLogs as any);
+router.post("/agent/logs", submitAgentLogs);
 
 // User authenticated routes
-router.delete('/:id', authMiddleware as any, remove as any);
-router.post('/:id/scan', authMiddleware as any, triggerScan as any);
-router.get('/:portId/logs', authMiddleware as any, getLogs as any);
-router.delete('/:portId/logs', authMiddleware as any, clearLogs as any);
+router.delete("/:id", authMiddleware, remove);
+router.post("/:id/scan", authMiddleware, triggerScan);
+router.get("/:portId/logs", authMiddleware, getLogs);
+router.delete("/:portId/logs", authMiddleware, clearLogs);
 
 export default router;
