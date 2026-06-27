@@ -1,59 +1,66 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router'
-import { Activity, Loader2, Shield } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { useAuthStore } from '@/stores/authStore'
-import { authAPI } from '@/lib/api'
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router";
+import { Activity, Loader2, Shield } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { useAuthStore } from "@/stores/authStore";
+import { authAPI } from "@/lib/api";
 
 export default function LoginPage() {
-  const [isRegister, setIsRegister] = useState(false)
-  const [email, setEmail] = useState('')
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [deviceAuthorizing, setDeviceAuthorizing] = useState(false)
+  const [isRegister, setIsRegister] = useState(false);
+  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [deviceAuthorizing, setDeviceAuthorizing] = useState(false);
 
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const deviceCode = searchParams.get('device_code')
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const deviceCode = searchParams.get("device_code");
 
-  const { login, register, isLoading, error, clearError, isAuthenticated } = useAuthStore()
+  const { login, register, isLoading, error, clearError, isAuthenticated } =
+    useAuthStore();
 
   useEffect(() => {
     if (isAuthenticated && !deviceCode) {
-      navigate('/', { replace: true })
+      navigate("/", { replace: true });
     }
-  }, [isAuthenticated, navigate, deviceCode])
+  }, [isAuthenticated, navigate, deviceCode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    clearError()
+    e.preventDefault();
+    clearError();
     try {
       if (isRegister) {
-        await register(email, username, password)
+        await register(email, username, password);
       } else {
-        await login(email, password)
+        await login(email, password);
       }
-      navigate('/', { replace: true })
+      navigate("/", { replace: true });
     } catch {
       // Error is set in the store
     }
-  }
+  };
 
   const handleDeviceAuthorize = async () => {
-    if (!deviceCode) return
-    setDeviceAuthorizing(true)
+    if (!deviceCode) return;
+    setDeviceAuthorizing(true);
     try {
-      await authAPI.authorizeDevice(deviceCode)
+      await authAPI.authorizeDevice(deviceCode);
       // Show success briefly then redirect
-      setTimeout(() => navigate('/', { replace: true }), 1500)
+      setTimeout(() => navigate("/", { replace: true }), 1500);
     } catch {
       // Error handling
-      setDeviceAuthorizing(false)
+      setDeviceAuthorizing(false);
     }
-  }
+  };
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
@@ -62,22 +69,25 @@ export default function LoginPage() {
         <div
           className="absolute -left-1/4 -top-1/4 h-[600px] w-[600px] rounded-full opacity-20 blur-[120px]"
           style={{
-            background: 'radial-gradient(circle, oklch(0.65 0.25 260) 0%, transparent 70%)',
-            animation: 'float-slow 20s ease-in-out infinite',
+            background:
+              "radial-gradient(circle, oklch(0.65 0.25 260) 0%, transparent 70%)",
+            animation: "float-slow 20s ease-in-out infinite",
           }}
         />
         <div
           className="absolute -bottom-1/4 -right-1/4 h-[500px] w-[500px] rounded-full opacity-15 blur-[100px]"
           style={{
-            background: 'radial-gradient(circle, oklch(0.65 0.20 310) 0%, transparent 70%)',
-            animation: 'float-slow 25s ease-in-out infinite reverse',
+            background:
+              "radial-gradient(circle, oklch(0.65 0.20 310) 0%, transparent 70%)",
+            animation: "float-slow 25s ease-in-out infinite reverse",
           }}
         />
         <div
           className="absolute left-1/3 top-1/2 h-[400px] w-[400px] rounded-full opacity-10 blur-[80px]"
           style={{
-            background: 'radial-gradient(circle, oklch(0.75 0.18 160) 0%, transparent 70%)',
-            animation: 'float-slow 15s ease-in-out infinite 5s',
+            background:
+              "radial-gradient(circle, oklch(0.75 0.18 160) 0%, transparent 70%)",
+            animation: "float-slow 15s ease-in-out infinite 5s",
           }}
         />
       </div>
@@ -99,8 +109,12 @@ export default function LoginPage() {
               <Activity className="h-7 w-7 text-white" />
             </div>
             <div className="text-left">
-              <CardTitle className="text-2xl font-bold tracking-tight">OrionPulse</CardTitle>
-              <CardDescription className="text-xs">Local Network Monitoring System</CardDescription>
+              <CardTitle className="text-2xl font-bold tracking-tight">
+                OrionPulse
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Local Network Monitoring System
+              </CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -113,13 +127,17 @@ export default function LoginPage() {
                 <Shield className="h-8 w-8 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-foreground">Authorize Terminal Access</h2>
+                <h2 className="text-lg font-semibold text-foreground">
+                  Authorize Terminal Access
+                </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   A terminal is requesting access to your OrionPulse account.
                 </p>
               </div>
               <div className="w-full rounded-lg border border-border bg-muted/50 px-4 py-3">
-                <span className="text-xs text-muted-foreground">Device Code</span>
+                <span className="text-xs text-muted-foreground">
+                  Device Code
+                </span>
                 <p className="mt-1 font-mono text-lg font-bold tracking-widest text-foreground">
                   {deviceCode}
                 </p>
@@ -140,24 +158,30 @@ export default function LoginPage() {
                 <button
                   type="button"
                   className={cn(
-                    'flex-1 rounded-md py-2 text-sm font-medium transition-all duration-200 cursor-pointer',
+                    "flex-1 rounded-md py-2 text-sm font-medium transition-all duration-200 cursor-pointer",
                     !isRegister
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
-                  onClick={() => { setIsRegister(false); clearError() }}
+                  onClick={() => {
+                    setIsRegister(false);
+                    clearError();
+                  }}
                 >
                   Sign In
                 </button>
                 <button
                   type="button"
                   className={cn(
-                    'flex-1 rounded-md py-2 text-sm font-medium transition-all duration-200 cursor-pointer',
+                    "flex-1 rounded-md py-2 text-sm font-medium transition-all duration-200 cursor-pointer",
                     isRegister
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
-                  onClick={() => { setIsRegister(true); clearError() }}
+                  onClick={() => {
+                    setIsRegister(true);
+                    clearError();
+                  }}
                 >
                   Register
                 </button>
@@ -165,7 +189,10 @@ export default function LoginPage() {
 
               <div className="space-y-3">
                 <div>
-                  <label htmlFor="email" className="mb-1 block text-xs font-medium text-muted-foreground">
+                  <label
+                    htmlFor="email"
+                    className="mb-1 block text-xs font-medium text-muted-foreground"
+                  >
                     Email
                   </label>
                   <Input
@@ -181,7 +208,10 @@ export default function LoginPage() {
 
                 {isRegister && (
                   <div>
-                    <label htmlFor="username" className="mb-1 block text-xs font-medium text-muted-foreground">
+                    <label
+                      htmlFor="username"
+                      className="mb-1 block text-xs font-medium text-muted-foreground"
+                    >
                       Username
                     </label>
                     <Input
@@ -197,7 +227,10 @@ export default function LoginPage() {
                 )}
 
                 <div>
-                  <label htmlFor="password" className="mb-1 block text-xs font-medium text-muted-foreground">
+                  <label
+                    htmlFor="password"
+                    className="mb-1 block text-xs font-medium text-muted-foreground"
+                  >
                     Password
                   </label>
                   <Input
@@ -207,22 +240,22 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    autoComplete={isRegister ? 'new-password' : 'current-password'}
+                    autoComplete={
+                      isRegister ? "new-password" : "current-password"
+                    }
                   />
                 </div>
               </div>
 
-              {error && (
-                <p className="text-sm text-destructive">{error}</p>
-              )}
+              {error && <p className="text-sm text-destructive">{error}</p>}
 
               <Button type="submit" className="w-full" isLoading={isLoading}>
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : isRegister ? (
-                  'Create Account'
+                  "Create Account"
                 ) : (
-                  'Sign In'
+                  "Sign In"
                 )}
               </Button>
             </form>
@@ -230,5 +263,5 @@ export default function LoginPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
