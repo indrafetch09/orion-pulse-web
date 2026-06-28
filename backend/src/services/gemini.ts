@@ -1,6 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { AISolution } from "../models/AISolution";
-import { PortLog } from "../models/PortLog";
+import { AISolution, IAISolution } from "../models/AISolution";
 // Helper to generate a cache key based on port number and simplified error message
 function generateErrorKey(
   portNumber: number,
@@ -57,7 +56,7 @@ export async function analyzePortFailure(
   portNumber: number,
   status: string,
   errorMessage?: string,
-): Promise<T> {
+): Promise<IAISolution> {
   const errorKey = generateErrorKey(portNumber, status, errorMessage);
 
   // 1. Try to find a cached solution for the same port failure fingerprint
