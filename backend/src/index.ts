@@ -42,12 +42,11 @@ app.use("/api/ports", portRoutes);
 app.use("/api/ai", aiRoutes);
 
 // Database Connection and Server Initialization
-const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://localhost:27017/orionpulse";
+const MONGODB_URI = process.env.MONGODB_URI;
 
 console.log("Connecting to MongoDB...");
 mongoose
-  .connect(MONGODB_URI)
+  .connect(`${MONGODB_URI}`)
   .then(() => {
     console.log("Successfully connected to MongoDB.");
 

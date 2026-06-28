@@ -1,9 +1,9 @@
-import { Schema, model, Document, Types } from 'mongoose';
+import { Schema, model, Document, Types } from "mongoose";
 
 export interface IPortLog extends Document {
   portId: Types.ObjectId;
   portNumber: number;
-  status: 'open' | 'closed' | 'filtered';
+  status: "open" | "closed" | "filtered";
   responseTime: number;
   checkedAt: Date;
   errorMessage?: string;
@@ -13,7 +13,7 @@ const portLogSchema = new Schema<IPortLog>(
   {
     portId: {
       type: Schema.Types.ObjectId,
-      ref: 'Port',
+      ref: "Port",
       required: true,
       index: true,
     },
@@ -23,7 +23,7 @@ const portLogSchema = new Schema<IPortLog>(
     },
     status: {
       type: String,
-      enum: ['open', 'closed', 'filtered'],
+      enum: ["open", "closed", "filtered"],
       required: true,
     },
     responseTime: {
@@ -34,7 +34,7 @@ const portLogSchema = new Schema<IPortLog>(
       type: Date,
       default: Date.now,
       // Automatically clean up logs older than 7 days to conserve database space
-      index: { expires: '7d' },
+      index: { expires: "7d" },
     },
     errorMessage: {
       type: String,
@@ -49,7 +49,7 @@ const portLogSchema = new Schema<IPortLog>(
         delete ret.__v;
       },
     },
-  }
+  },
 );
 
-export const PortLog = model<IPortLog>('PortLog', portLogSchema);
+export const PortLog = model<IPortLog>("PortLog", portLogSchema);

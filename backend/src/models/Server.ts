@@ -1,9 +1,9 @@
-import { Schema, model, Document, Types } from 'mongoose';
+import { Schema, model, Document, Types } from "mongoose";
 
 export interface IServer extends Document {
   name: string;
   hostname: string;
-  status: 'online' | 'offline' | 'warning';
+  status: "online" | "offline" | "warning";
   lastHeartbeat: Date;
   userId: Types.ObjectId;
   createdAt: Date;
@@ -24,8 +24,8 @@ const serverSchema = new Schema<IServer>(
     },
     status: {
       type: String,
-      enum: ['online', 'offline', 'warning'],
-      default: 'offline',
+      enum: ["online", "offline", "warning"],
+      default: "offline",
     },
     lastHeartbeat: {
       type: Date,
@@ -33,7 +33,7 @@ const serverSchema = new Schema<IServer>(
     },
     userId: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
   },
@@ -46,7 +46,7 @@ const serverSchema = new Schema<IServer>(
         delete ret.__v;
       },
     },
-  }
+  },
 );
 
-export const Server = model<IServer>('Server', serverSchema);
+export const Server = model<IServer>("Server", serverSchema);

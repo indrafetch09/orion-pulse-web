@@ -1,8 +1,24 @@
-import { useState } from 'react'
-import { User, Key, Terminal, AlertTriangle, Eye, EyeOff, Copy, Check, RefreshCw } from 'lucide-react'
-import { formatDate } from '@/lib/utils'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { useState } from "react";
+import {
+  User,
+  Key,
+  Terminal,
+  AlertTriangle,
+  Eye,
+  EyeOff,
+  Copy,
+  Check,
+  RefreshCw,
+} from "lucide-react";
+import { formatDate } from "@/lib/utils";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,37 +26,43 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
 
-const mockUser = { id: '1', email: 'admin@orionpulse.io', username: 'admin', createdAt: '2025-01-15T00:00:00Z' }
-const mockApiToken = 'op_tk_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6'
+const mockUser = {
+  id: "1",
+  email: "admin@orionpulse.io",
+  username: "admin",
+  createdAt: "2025-01-15T00:00:00Z",
+};
+const mockApiToken = "op_tk_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6";
 
 const cliSteps = [
-  { label: 'Install CLI', command: 'npm install -g orionpulse-cli' },
-  { label: 'Authenticate', command: 'orionpulse login <your-token>' },
-  { label: 'Start Agent', command: 'orionpulse start' },
-]
+  { label: "Install CLI", command: "npm install -g orionpulse-cli" },
+  { label: "Authenticate", command: "orionpulse login <your-token>" },
+  { label: "Start Agent", command: "orionpulse start" },
+];
 
 export default function SettingsPage() {
-  const [tokenVisible, setTokenVisible] = useState(false)
-  const [copiedToken, setCopiedToken] = useState(false)
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [regenDialogOpen, setRegenDialogOpen] = useState(false)
+  const [tokenVisible, setTokenVisible] = useState(false);
+  const [copiedToken, setCopiedToken] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [regenDialogOpen, setRegenDialogOpen] = useState(false);
 
   const handleCopyToken = async () => {
-    await navigator.clipboard.writeText(mockApiToken)
-    setCopiedToken(true)
-    setTimeout(() => setCopiedToken(false), 2000)
-  }
+    await navigator.clipboard.writeText(mockApiToken);
+    setCopiedToken(true);
+    setTimeout(() => setCopiedToken(false), 2000);
+  };
 
   const handleCopyCommand = async (command: string, index: number) => {
-    await navigator.clipboard.writeText(command)
-    setCopiedIndex(index)
-    setTimeout(() => setCopiedIndex(null), 2000)
-  }
+    await navigator.clipboard.writeText(command);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
 
-  const maskedToken = mockApiToken.slice(0, 8) + '•'.repeat(24) + mockApiToken.slice(-4)
+  const maskedToken =
+    mockApiToken.slice(0, 8) + "•".repeat(24) + mockApiToken.slice(-4);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -63,26 +85,32 @@ export default function SettingsPage() {
               <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
                 Username
               </label>
-              <p className="mt-1 text-sm font-medium text-foreground">{mockUser.username}</p>
+              <p className="mt-1 text-sm font-medium text-foreground">
+                {mockUser.username}
+              </p>
             </div>
             <div>
               <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
                 Email
               </label>
-              <p className="mt-1 text-sm font-medium text-foreground">{mockUser.email}</p>
+              <p className="mt-1 text-sm font-medium text-foreground">
+                {mockUser.email}
+              </p>
             </div>
             <div>
               <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
                 Member Since
               </label>
-              <p className="mt-1 text-sm text-muted-foreground">{formatDate(mockUser.createdAt)}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {formatDate(mockUser.createdAt)}
+              </p>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* API Token */}
-      <Card className="animate-fade-in" style={{ animationDelay: '50ms' }}>
+      <Card className="animate-fade-in" style={{ animationDelay: "50ms" }}>
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
@@ -90,7 +118,9 @@ export default function SettingsPage() {
             </div>
             <div>
               <CardTitle>API Token</CardTitle>
-              <CardDescription>Used to authenticate CLI connections</CardDescription>
+              <CardDescription>
+                Used to authenticate CLI connections
+              </CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -105,7 +135,11 @@ export default function SettingsPage() {
               className="h-8 w-8 shrink-0"
               onClick={() => setTokenVisible(!tokenVisible)}
             >
-              {tokenVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {tokenVisible ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
             </Button>
             <Button
               variant="ghost"
@@ -113,10 +147,18 @@ export default function SettingsPage() {
               className="h-8 w-8 shrink-0"
               onClick={handleCopyToken}
             >
-              {copiedToken ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
+              {copiedToken ? (
+                <Check className="h-4 w-4 text-success" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
             </Button>
           </div>
-          <Button variant="outline" size="sm" onClick={() => setRegenDialogOpen(true)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setRegenDialogOpen(true)}
+          >
             <RefreshCw className="h-3.5 w-3.5" />
             Regenerate Token
           </Button>
@@ -124,7 +166,7 @@ export default function SettingsPage() {
       </Card>
 
       {/* CLI Connection */}
-      <Card className="animate-fade-in" style={{ animationDelay: '100ms' }}>
+      <Card className="animate-fade-in" style={{ animationDelay: "100ms" }}>
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10">
@@ -132,7 +174,9 @@ export default function SettingsPage() {
             </div>
             <div>
               <CardTitle>CLI Connection</CardTitle>
-              <CardDescription>Connect your local terminal to OrionPulse</CardDescription>
+              <CardDescription>
+                Connect your local terminal to OrionPulse
+              </CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -144,7 +188,9 @@ export default function SettingsPage() {
                   {index + 1}. {step.label}
                 </label>
                 <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-4 py-2.5">
-                  <code className="flex-1 font-mono text-sm text-foreground">{step.command}</code>
+                  <code className="flex-1 font-mono text-sm text-foreground">
+                    {step.command}
+                  </code>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -165,7 +211,10 @@ export default function SettingsPage() {
       </Card>
 
       {/* Danger Zone */}
-      <Card className="animate-fade-in border-destructive/30" style={{ animationDelay: '150ms' }}>
+      <Card
+        className="animate-fade-in border-destructive/30"
+        style={{ animationDelay: "150ms" }}
+      >
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/10">
@@ -173,17 +222,27 @@ export default function SettingsPage() {
             </div>
             <div>
               <CardTitle className="text-destructive">Danger Zone</CardTitle>
-              <CardDescription>Irreversible actions for your account</CardDescription>
+              <CardDescription>
+                Irreversible actions for your account
+              </CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3">
             <div>
-              <p className="text-sm font-medium text-foreground">Delete Account</p>
-              <p className="text-xs text-muted-foreground">Permanently delete your account and all data.</p>
+              <p className="text-sm font-medium text-foreground">
+                Delete Account
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Permanently delete your account and all data.
+              </p>
             </div>
-            <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)}>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setDeleteDialogOpen(true)}
+            >
               Delete Account
             </Button>
           </div>
@@ -196,7 +255,8 @@ export default function SettingsPage() {
           <DialogHeader>
             <DialogTitle>Regenerate API Token</DialogTitle>
             <DialogDescription>
-              This will invalidate your current token. All connected CLI instances will need to re-authenticate.
+              This will invalidate your current token. All connected CLI
+              instances will need to re-authenticate.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -217,14 +277,21 @@ export default function SettingsPage() {
           <DialogHeader>
             <DialogTitle>Delete Account</DialogTitle>
             <DialogDescription>
-              This action is permanent and cannot be undone. All your data, servers, ports, and scan logs will be permanently deleted.
+              This action is permanent and cannot be undone. All your data,
+              servers, ports, and scan logs will be permanently deleted.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={() => setDeleteDialogOpen(false)}>
+            <Button
+              variant="destructive"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
               <AlertTriangle className="h-4 w-4" />
               Delete Permanently
             </Button>
@@ -232,5 +299,5 @@ export default function SettingsPage() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

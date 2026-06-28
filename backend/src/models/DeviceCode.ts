@@ -1,10 +1,10 @@
-import { Schema, model, Document, Types } from 'mongoose';
+import { Schema, model, Document, Types } from "mongoose";
 
 export interface IDeviceCode extends Document {
   deviceCode: string;
   userCode: string;
   userId?: Types.ObjectId | null;
-  status: 'pending' | 'authorized' | 'expired';
+  status: "pending" | "authorized" | "expired";
   createdAt: Date;
 }
 
@@ -23,13 +23,13 @@ const deviceCodeSchema = new Schema<IDeviceCode>(
     },
     userId: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       default: null,
     },
     status: {
       type: String,
-      enum: ['pending', 'authorized', 'expired'],
-      default: 'pending',
+      enum: ["pending", "authorized", "expired"],
+      default: "pending",
     },
     createdAt: {
       type: Date,
@@ -47,7 +47,7 @@ const deviceCodeSchema = new Schema<IDeviceCode>(
         delete ret.__v;
       },
     },
-  }
+  },
 );
 
-export const DeviceCode = model<IDeviceCode>('DeviceCode', deviceCodeSchema);
+export const DeviceCode = model<IDeviceCode>("DeviceCode", deviceCodeSchema);

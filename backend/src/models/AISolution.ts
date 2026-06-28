@@ -1,4 +1,4 @@
-import { Schema, model, Document, Types } from 'mongoose';
+import { Schema, model, Document, Types } from "mongoose";
 
 export interface IAISolution extends Document {
   portLogId: Types.ObjectId;
@@ -16,7 +16,7 @@ const aiSolutionSchema = new Schema<IAISolution>(
   {
     portLogId: {
       type: Schema.Types.ObjectId,
-      ref: 'PortLog',
+      ref: "PortLog",
       required: true,
       index: true,
     },
@@ -55,7 +55,7 @@ const aiSolutionSchema = new Schema<IAISolution>(
         delete ret.__v;
       },
     },
-  }
+  },
 );
 
-export const AISolution = model<IAISolution>('AISolution', aiSolutionSchema);
+export const AISolution = model<IAISolution>("AISolution", aiSolutionSchema);

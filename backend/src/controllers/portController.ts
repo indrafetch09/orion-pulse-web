@@ -1,24 +1,33 @@
-import { Response } from 'express';
-import { Port } from '../models/Port';
-import { Server } from '../models/Server';
-import { PortLog } from '../models/PortLog';
-import { AISolution } from '../models/AISolution';
-import { AuthenticatedRequest } from '../middleware/authMiddleware';
-import { broadcastPortUpdate, broadcastNewLog, requestAgentScan } from '../socket';
-import { analyzePortFailure } from '../services/gemini';
+import { Request, Response } from "express";
+import { Port } from "../models/Port";
+import { Server } from "../models/Server";
+import { PortLog } from "../models/PortLog";
+import { AISolution } from "../models/AISolution";
+import { AuthenticatedRequest } from "../middleware/authMiddleware";
+import {
+  broadcastPortUpdate,
+  broadcastNewLog,
+  requestAgentScan,
+} from "../socket";
+import { analyzePortFailure } from "../services/gemini";
 
 // GET /servers/:serverId/ports
 export const getAll = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ success: false, message: 'Unauthorized' });
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
     const { serverId } = req.params;
     // Verify server belongs to user
-    const serverObj = await Server.findOne({ _id: serverId, userId: req.user.id });
+    const serverObj = await Server.findOne({
+      _id: serverId,
+      userId: req.user.id,
+    });
     if (!serverObj) {
-      return res.status(404).json({ success: false, message: 'Server not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Server not found" });
     }
 
     const ports = await Port.find({ serverId });
@@ -26,8 +35,8 @@ export const getAll = async (req: AuthenticatedRequest, res: Response) => {
       success: true,
       data: ports,
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error: unknown) {
+    return res.status(500).json({ success: false, message: error });
   }
 };
 
@@ -35,19 +44,27 @@ export const getAll = async (req: AuthenticatedRequest, res: Response) => {
 export const add = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ success: false, message: 'Unauthorized' });
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
     const { serverId } = req.params;
     const { portNumber, protocol, label } = req.body;
 
     if (!portNumber || !protocol || !label) {
-      return res.status(400).json({ success: false, message: 'Port number, protocol, and label are required' });
+      return res.status(400).json({
+        success: false,
+        message: "Port number, protocol, and label are required",
+      });
     }
 
-    const serverObj = await Server.findOne({ _id: serverId, userId: req.user.id });
+    const serverObj = await Server.findOne({
+      _id: serverId,
+      userId: req.user.id,
+    });
     if (!serverObj) {
-      return res.status(404).json({ success: false, message: 'Server not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Server not found" });
     }
 
     const port = await Port.create({
@@ -55,7 +72,7 @@ export const add = async (req: AuthenticatedRequest, res: Response) => {
       protocol,
       label,
       serverId,
-      status: 'closed',
+      status: "closed",
       responseTime: 0,
       lastChecked: new Date(),
     });
@@ -67,15 +84,21 @@ export const add = async (req: AuthenticatedRequest, res: Response) => {
       success: true,
       data: port,
     });
-  } catch (error: any) {
+  } catch (error) {
     // Handle unique constraint conflict (e.g. port already registered)
-    if (error.code === 11000) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      (error as { code: number }).code === 11000
+    ) {
       return res.status(400).json({
         success: false,
-        message: 'This port and protocol combination is already being monitored on this server.',
+        message:
+          "This port and protocol combination is already being monitored on this server.",
       });
     }
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error });
   }
 };
 
@@ -83,19 +106,27 @@ export const add = async (req: AuthenticatedRequest, res: Response) => {
 export const remove = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ success: false, message: 'Unauthorized' });
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
     const { id } = req.params;
     const portObj = await Port.findById(id);
     if (!portObj) {
-      return res.status(404).json({ success: false, message: 'Port monitoring entry not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Port monitoring entry not found" });
     }
 
     // Verify ownership of server
-    const serverObj = await Server.findOne({ _id: portObj.serverId, userId: req.user.id });
+    const serverObj = await Server.findOne({
+      _id: portObj.serverId,
+      userId: req.user.id,
+    });
     if (!serverObj) {
-      return res.status(401).json({ success: false, message: 'Unauthorized access to this resource' });
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized access to this resource",
+      });
     }
 
     await Port.deleteOne({ _id: id });
@@ -107,10 +138,10 @@ export const remove = async (req: AuthenticatedRequest, res: Response) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Port and its corresponding logs deleted successfully',
+      message: "Port and its corresponding logs deleted successfully",
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error: unknown) {
+    return res.status(500).json({ success: false, message: error });
   }
 };
 
@@ -118,24 +149,30 @@ export const remove = async (req: AuthenticatedRequest, res: Response) => {
 export const triggerScan = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ success: false, message: 'Unauthorized' });
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
     const { id } = req.params;
     const portObj = await Port.findById(id);
     if (!portObj) {
-      return res.status(404).json({ success: false, message: 'Port not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Port not found" });
     }
 
-    const serverObj = await Server.findOne({ _id: portObj.serverId, userId: req.user.id });
+    const serverObj = await Server.findOne({
+      _id: portObj.serverId,
+      userId: req.user.id,
+    });
     if (!serverObj) {
-      return res.status(401).json({ success: false, message: 'Unauthorized' });
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    if (serverObj.status !== 'online') {
+    if (serverObj.status !== "online") {
       return res.status(400).json({
         success: false,
-        message: 'The local monitoring agent is currently offline. Cannot trigger an instant-scan.',
+        message:
+          "The local monitoring agent is currently offline. Cannot trigger an instant-scan.",
       });
     }
 
@@ -149,16 +186,17 @@ export const triggerScan = async (req: AuthenticatedRequest, res: Response) => {
     if (!sent) {
       return res.status(500).json({
         success: false,
-        message: 'Failed to communicate with the local monitoring agent.',
+        message: "Failed to communicate with the local monitoring agent.",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Instant-scan command dispatched to local agent. Updating dashboard soon...',
+      message:
+        "Instant-scan command dispatched to local agent. Updating dashboard soon...",
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error: unknown) {
+    return res.status(500).json({ success: false, message: error });
   }
 };
 
@@ -166,7 +204,7 @@ export const triggerScan = async (req: AuthenticatedRequest, res: Response) => {
 export const getLogs = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ success: false, message: 'Unauthorized' });
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
     const { portId } = req.params;
@@ -174,10 +212,10 @@ export const getLogs = async (req: AuthenticatedRequest, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 50;
     const status = req.query.status as string;
 
-    const query: any = { portId };
-    if (status && status !== 'all') {
-      query.status = status;
-    }
+    const query = {
+      portId,
+      ...(status && status !== "all" ? { status } : {}),
+    };
 
     const logs = await PortLog.find(query)
       .sort({ checkedAt: -1 })
@@ -198,8 +236,8 @@ export const getLogs = async (req: AuthenticatedRequest, res: Response) => {
         },
       },
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error: unknown) {
+    return res.status(500).json({ success: false, message: error });
   }
 };
 
@@ -207,54 +245,64 @@ export const getLogs = async (req: AuthenticatedRequest, res: Response) => {
 export const clearLogs = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ success: false, message: 'Unauthorized' });
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
     const { portId } = req.params;
     const portObj = await Port.findById(portId);
     if (!portObj) {
-      return res.status(404).json({ success: false, message: 'Port not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Port not found" });
     }
 
-    const serverObj = await Server.findOne({ _id: portObj.serverId, userId: req.user.id });
+    const serverObj = await Server.findOne({
+      _id: portObj.serverId,
+      userId: req.user.id,
+    });
     if (!serverObj) {
-      return res.status(401).json({ success: false, message: 'Unauthorized' });
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
     await PortLog.deleteMany({ portId });
 
     return res.status(200).json({
       success: true,
-      message: 'Logs cleared successfully',
+      message: "Logs cleared successfully",
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error: unknown) {
+    return res.status(500).json({ success: false, message: error });
   }
 };
 
 // Agent API endpoint: POST /api/agent/logs
 // Used by the CLI agent to post checked logs
-export const submitAgentLogs = async (req: any, res: Response) => {
+export const submitAgentLogs = async (req: Request, res: Response) => {
   try {
     const { serverId, logs } = req.body;
     if (!serverId || !Array.isArray(logs)) {
-      return res.status(400).json({ success: false, message: 'Invalid payload structure' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid payload structure" });
     }
 
     const serverObj = await Server.findById(serverId);
     if (!serverObj) {
-      return res.status(404).json({ success: false, message: 'Server not registered' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Server not registered" });
     }
 
     // Update server status & heartbeat
-    serverObj.status = 'online';
+    serverObj.status = "online";
     serverObj.lastHeartbeat = new Date();
     await serverObj.save();
 
     const createdLogs = [];
 
     for (const logItem of logs) {
-      const { portNumber, protocol, status, responseTime, errorMessage } = logItem;
+      const { portNumber, protocol, status, responseTime, errorMessage } =
+        logItem;
 
       // Find the Port config. If not registered, create it automatically or skip.
       // Usually, the CLI monitors what we tell it, but it could report scan results.
@@ -263,7 +311,7 @@ export const submitAgentLogs = async (req: any, res: Response) => {
         // Auto-register port reported by CLI scan
         portObj = await Port.create({
           portNumber,
-          protocol: protocol || 'TCP',
+          protocol: protocol || "TCP",
           label: `Auto-Scanned Port ${portNumber}`,
           serverId,
           status,
@@ -291,22 +339,24 @@ export const submitAgentLogs = async (req: any, res: Response) => {
       createdLogs.push(newLog);
 
       // Trigger Gemini analysis if port is offline (closed / filtered)
-      if (status !== 'open') {
+      if (status !== "open") {
         // Let it run in the background so it doesn't block agent request
         analyzePortFailure(
           newLog._id.toString(),
           portNumber,
           status,
-          errorMessage
-        ).then((aiSolution) => {
-          // Notify dashboard when AI completes analysis
-          broadcastNewLog(portObj!._id.toString(), {
-            ...newLog.toJSON(),
-            aiSolution,
+          errorMessage,
+        )
+          .then((aiSolution) => {
+            // Notify dashboard when AI completes analysis
+            broadcastNewLog(portObj!._id.toString(), {
+              ...newLog.toJSON(),
+              aiSolution,
+            });
+          })
+          .catch((err) => {
+            console.error(`AI analysis failed for Port ${portNumber}:`, err);
           });
-        }).catch((err) => {
-          console.error(`AI analysis failed for Port ${portNumber}:`, err);
-        });
       } else {
         // Just broadcast the log normal status
         broadcastNewLog(portObj._id.toString(), newLog);
@@ -320,7 +370,7 @@ export const submitAgentLogs = async (req: any, res: Response) => {
       success: true,
       message: `Logs recorded successfully. Processed ${logs.length} entries.`,
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error: unknown) {
+    return res.status(500).json({ success: false, message: error });
   }
 };

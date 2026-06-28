@@ -1,22 +1,22 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { User } from "../models/User";
+import { IUser, User } from "../models/User";
 import { DeviceCode } from "../models/DeviceCode";
 import { AuthenticatedRequest } from "../middleware/authMiddleware";
+import { Types } from "mongoose";
 
-const JWT_SECRET =
-  process.env.JWT_SECRET || "supersecretkeychangeinproduction12345";
+const JWT_SECRET = process.env.JWT_SECRET;
 
-const signToken = (user) => {
+const signToken = (user: IUser) => {
   return jwt.sign(
     { id: user.id, email: user.email, username: user.username },
-    JWT_SECRET,
+    `${JWT_SECRET}`,
     { expiresIn: "30d" },
   );
 };
 
-export const register = async (req: AuthenticatedRequest, res: Response) => {
+export const register = async (req: Request, res: Response) => {
   try {
     const { email, username, password } = req.body;
 
@@ -49,12 +49,12 @@ export const register = async (req: AuthenticatedRequest, res: Response) => {
         user,
       },
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error: unknown) {
+    return res.status(500).json({ success: false, message: error });
   }
 };
 
-export const login = async (req: AuthenticatedRequest, res: Response) => {
+export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
@@ -87,8 +87,8 @@ export const login = async (req: AuthenticatedRequest, res: Response) => {
         user,
       },
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error: unknown) {
+    return res.status(500).json({ success: false, message: error });
   }
 };
 
@@ -109,8 +109,8 @@ export const getProfile = async (req: AuthenticatedRequest, res: Response) => {
       success: true,
       data: user,
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error: unknown) {
+    return res.status(500).json({ success: false, message: error });
   }
 };
 
@@ -139,7 +139,7 @@ export const requestDeviceCode = async (
       status: "pending",
     });
 
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const frontendUrl = process.env.FRONTEND_URL;
 
     return res.status(200).json({
       success: true,
@@ -149,8 +149,8 @@ export const requestDeviceCode = async (
         verificationUri: `${frontendUrl}/cli-login?device_code=${userCode}`,
       },
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error: unknown) {
+    return res.status(500).json({ success: false, message: error });
   }
 };
 
@@ -172,7 +172,7 @@ export const authorizeDeviceCode = async (
     }
 
     // Find by userCode or deviceCode to be flexible (since frontend uses userCode as deviceCode parameter)
-    let deviceCodeDoc = await DeviceCode.findOne({
+    const deviceCodeDoc = await DeviceCode.findOne({
       $or: [{ deviceCode }, { userCode: deviceCode }],
       status: "pending",
     });
@@ -185,15 +185,15 @@ export const authorizeDeviceCode = async (
     }
 
     deviceCodeDoc.status = "authorized";
-    deviceCodeDoc.userId = req.user.id as any;
+    deviceCodeDoc.userId = new Types.ObjectId(req.user.id);
     await deviceCodeDoc.save();
 
     return res.status(200).json({
       success: true,
       message: "Terminal authorized successfully",
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error: unknown) {
+    return res.status(500).json({ success: false, message: error });
   }
 };
 
@@ -253,7 +253,7 @@ export const checkDeviceToken = async (
     return res
       .status(400)
       .json({ success: false, message: "Code expired or invalid" });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error: unknown) {
+    return res.status(500).json({ success: false, message: error });
   }
 };

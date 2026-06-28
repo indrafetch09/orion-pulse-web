@@ -1,6 +1,8 @@
 import { Server as SocketIOServer } from "socket.io";
 import { Server as HttpServer } from "http";
 import { Server } from "./models/Server";
+import { IPort } from "./models/Port";
+import { IPortLog } from "./models/PortLog";
 
 let io: SocketIOServer | null = null;
 
@@ -82,9 +84,10 @@ export function initSocket(httpServer: HttpServer) {
     });
 
     // Handle manual scan request completion from agent
+    // i change type of result to string for testing
     socket.on(
       "scan-completed",
-      (data: { serverId: string; portId: string; result: any }) => {
+      (data: { serverId: string; portId: string; result: string }) => {
         // Broadcast log update to dashboards
         io?.to("dashboards").emit("port-scan-completed", data);
       },
@@ -159,13 +162,16 @@ export function initSocket(httpServer: HttpServer) {
 }
 
 // Helpers to trigger real-time updates from REST controllers
-export function broadcastPortUpdate(serverId: string, portData: any) {
+export function broadcastPortUpdate(
+  serverId: string,
+  portData: IPort | { id: string; deleted: boolean } | Record<string, unknown>,
+) {
   if (io) {
     io.to("dashboards").emit("port-updated", { serverId, port: portData });
   }
 }
 
-export function broadcastNewLog(portId: string, logData: any) {
+export function broadcastNewLog(portId: string, logData: IPortLog | Record<string, unknown>) {
   if (io) {
     io.to("dashboards").emit("new-port-log", { portId, log: logData });
   }

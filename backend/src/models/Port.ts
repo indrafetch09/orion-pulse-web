@@ -1,10 +1,10 @@
-import { Schema, model, Document, Types } from 'mongoose';
+import { Schema, model, Document, Types } from "mongoose";
 
 export interface IPort extends Document {
   portNumber: number;
-  protocol: 'TCP' | 'UDP';
+  protocol: "TCP" | "UDP";
   label: string;
-  status: 'open' | 'closed' | 'filtered';
+  status: "open" | "closed" | "filtered";
   serverId: Types.ObjectId;
   lastChecked: Date;
   responseTime: number;
@@ -20,8 +20,8 @@ const portSchema = new Schema<IPort>(
     },
     protocol: {
       type: String,
-      enum: ['TCP', 'UDP'],
-      default: 'TCP',
+      enum: ["TCP", "UDP"],
+      default: "TCP",
     },
     label: {
       type: String,
@@ -30,12 +30,12 @@ const portSchema = new Schema<IPort>(
     },
     status: {
       type: String,
-      enum: ['open', 'closed', 'filtered'],
-      default: 'closed',
+      enum: ["open", "closed", "filtered"],
+      default: "closed",
     },
     serverId: {
       type: Schema.Types.ObjectId,
-      ref: 'Server',
+      ref: "Server",
       required: true,
     },
     lastChecked: {
@@ -56,10 +56,10 @@ const portSchema = new Schema<IPort>(
         delete ret.__v;
       },
     },
-  }
+  },
 );
 
 // Unique compound index so a port/protocol combo is unique per server node
 portSchema.index({ serverId: 1, portNumber: 1, protocol: 1 }, { unique: true });
 
-export const Port = model<IPort>('Port', portSchema);
+export const Port = model<IPort>("Port", portSchema);
