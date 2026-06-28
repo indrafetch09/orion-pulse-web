@@ -171,7 +171,10 @@ export function broadcastPortUpdate(
   }
 }
 
-export function broadcastNewLog(portId: string, logData: IPortLog | Record<string, unknown>) {
+export function broadcastNewLog(
+  portId: string,
+  logData: IPortLog | Record<string, unknown>,
+) {
   if (io) {
     io.to("dashboards").emit("new-port-log", { portId, log: logData });
   }
