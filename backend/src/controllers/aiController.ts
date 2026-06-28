@@ -3,6 +3,8 @@ import { AISolution } from "../models/AISolution";
 import { Port } from "../models/Port";
 import { Server } from "../models/Server";
 import { AuthenticatedRequest } from "../middleware/authMiddleware";
+import { Types } from "mongoose";
+import { IPortLog } from "../models/PortLog";
 
 // GET /ai/solutions
 export const getSolutions = async (
@@ -23,10 +25,10 @@ export const getSolutions = async (
     const serverIds = userServers.map((s) => s._id);
 
     // Retrieve user's ports matching query or all user's ports
-    const portQuery: any = { serverId: { $in: serverIds } };
-    if (portId) {
-      portQuery._id = portId;
-    }
+    const portQuery = {
+      serverId: { $in: serverIds },
+      ...(portId ? { _id: new Types.ObjectId(portId as string) } : {}),
+    };
     const userPorts = await Port.find(portQuery, "_id");
     const portIds = userPorts.map((p) => p._id);
 
@@ -54,11 +56,10 @@ export const getSolutions = async (
 
     // Filter to ensure the populated portLog belongs to one of the user's ports
     // (This guarantees multi-tenant security)
-    const secureSolutions = solutions.filter((sol: any) => {
-      if (!sol.portLogId) return false;
-      return portIds.some(
-        (pId) => pId.toString() === sol.portLogId.portId.toString(),
-      );
+    const secureSolutions = solutions.filter((sol) => {
+      const log = sol.portLogId as unknown as IPortLog;
+      if (!log) return false;
+      return portIds.some((pId) => pId.toString() === log.portId?.toString());
     });
 
     const total = secureSolutions.length; // Approximate total after secure filter
@@ -95,7 +96,7 @@ export const getSolution = async (req: AuthenticatedRequest, res: Response) => {
     }
 
     // Verify ownership of the server related to this solution
-    const logObj: any = solution.portLogId;
+    const logObj = solution.portLogId as unknown as IPortLog;
     if (!logObj) {
       return res
         .status(404)

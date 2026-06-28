@@ -84,9 +84,14 @@ export const add = async (req: AuthenticatedRequest, res: Response) => {
       success: true,
       data: port,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     // Handle unique constraint conflict (e.g. port already registered)
-    if (error.code === 11000) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      (error as { code: number }).code === 11000
+    ) {
       return res.status(400).json({
         success: false,
         message:
@@ -207,10 +212,10 @@ export const getLogs = async (req: AuthenticatedRequest, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 50;
     const status = req.query.status as string;
 
-    const query: any = { portId };
-    if (status && status !== "all") {
-      query.status = status;
-    }
+    const query = {
+      portId,
+      ...(status && status !== "all" ? { status } : {}),
+    };
 
     const logs = await PortLog.find(query)
       .sort({ checkedAt: -1 })
