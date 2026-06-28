@@ -1,3 +1,4 @@
+import { intro, outro, spinner, note, cancel } from "@clack/prompts";
 import axios from "axios";
 import open from "open";
 import { writeConfig } from "../services/config.js";
@@ -7,33 +8,40 @@ const BACKEND_URL =
 const FRONTEND_URL = process.env.ORIONPULSE_WEB_URL || "http://localhost:5173";
 
 export async function loginCommand() {
-  try {
-    console.log("Initiating terminal authorization flow...");
+  intro(
+    "Welcome to OrionPulse, Your Local Agent Port Manager - Terminal Authorization",
+  );
 
+  const s = spinner();
+  s.start("Generating authorization code...");
+
+  try {
     // 1. Get device authorization code
     const res = await axios.post(`${BACKEND_URL}/auth/device/code`);
     const { deviceCode, userCode, verificationUri } = res.data.data;
 
-    // Use verificationUri from backend if available, otherwise build it
+    s.stop("Authorization code generated!");
+
     const hasValidUri =
       verificationUri && !verificationUri.startsWith("undefined");
     const loginUrl = hasValidUri
       ? verificationUri
       : `${FRONTEND_URL}/cli-login?device_code=${userCode}`;
 
-    console.log(`\n==================================================`);
-    console.log(`Open the following link in your browser to login:`);
-    console.log(`👉 ${loginUrl}`);
-    console.log(`==================================================\n`);
+    note(
+      `Open this link in your browser to authorize:\n\n👉 ${loginUrl}`,
+      "Authorize Terminal Access",
+    );
 
-    console.log("Opening browser automatically...");
+    s.start("Opening your web browser automatically...");
     await open(loginUrl).catch(() => {
-      console.log(
-        "(Failed to open browser automatically. Please copy and paste the link above manually).",
-      );
+      // Keep going even if automatic open fails
     });
+    s.stop(
+      "Browser opened! (If it did not open, please copy/paste the link above).",
+    );
 
-    console.log("\nWaiting for authorization approval in browser...");
+    s.start("Waiting for authorization approval in browser...");
 
     // 2. Poll for token
     let isAuthorized = false;
@@ -42,8 +50,6 @@ export async function loginCommand() {
 
     while (!isAuthorized && attempts < maxAttempts) {
       attempts++;
-      // Print dot to show active polling
-      process.stdout.write(".");
 
       await new Promise((resolve) => setTimeout(resolve, 5000));
 
@@ -55,26 +61,23 @@ export async function loginCommand() {
 
         if (status === "authorized") {
           writeConfig({ token });
-          console.log(
-            `\n\n✔ Success! Logged in as ${user.username} (${user.email})`,
-          );
-          console.log("Credentials saved securely in ~/.orionpulse.json");
+          s.stop(`Success! Connected as ${user.username} (${user.email})`);
+          outro("Credentials saved securely in ~/.orionpulse.json");
           isAuthorized = true;
           process.exit(0);
         } else if (status === "expired") {
-          console.log(
-            "\n\n❌ Sorry, your session has expired. Please try logging in again.",
-          );
+          s.stop("Failed");
+          cancel("Session expired. Please run the login command again.");
           process.exit(1);
         } else if (status === "invalid") {
-          console.log("\n\n❌ Invalid credentials.");
+          s.stop("Failed");
+          cancel("Invalid credentials.");
           process.exit(1);
         }
       } catch (err) {
         if (err.response?.status === 404) {
-          console.log(
-            "\n\n❌ Session not found or expired. Please run the login command again.",
-          );
+          s.stop("Failed");
+          cancel("Authorization session not found or expired.");
           process.exit(1);
         }
         // Network errors or other issues are ignored during polling to continue attempts
@@ -82,11 +85,13 @@ export async function loginCommand() {
     }
 
     if (!isAuthorized) {
-      console.log("\n\n❌ Login timeout. Please try again.");
+      s.stop("Failed");
+      cancel("Login timeout. Please try again.");
       process.exit(1);
     }
   } catch (error) {
-    console.error("\n❌ Failed to Login:", error.message);
+    s.stop("Failed");
+    cancel(`Failed to initialize login: ${error.message}`);
     process.exit(1);
   }
 }
