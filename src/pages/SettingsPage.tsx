@@ -8,9 +8,9 @@ import {
   EyeOff,
   Copy,
   Check,
-  RefreshCw,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { useAuthStore } from "@/stores/authStore";
 import {
   Card,
   CardContent,
@@ -28,29 +28,20 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-const mockUser = {
-  id: "1",
-  email: "admin@orionpulse.io",
-  username: "admin",
-  createdAt: "2025-01-15T00:00:00Z",
-};
-const mockApiToken = "op_tk_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6";
-
-const cliSteps = [
-  { label: "Install CLI", command: "npm install -g orionpulse-cli" },
-  { label: "Authenticate", command: "orionpulse login <your-token>" },
-  { label: "Start Agent", command: "orionpulse start" },
-];
-
 export default function SettingsPage() {
+  const user = useAuthStore((s) => s.user);
+  const sessionToken =
+    useAuthStore((s) => s.token) ||
+    localStorage.getItem("orionpulse_token") ||
+    "";
+
   const [tokenVisible, setTokenVisible] = useState(false);
   const [copiedToken, setCopiedToken] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [regenDialogOpen, setRegenDialogOpen] = useState(false);
 
   const handleCopyToken = async () => {
-    await navigator.clipboard.writeText(mockApiToken);
+    await navigator.clipboard.writeText(sessionToken);
     setCopiedToken(true);
     setTimeout(() => setCopiedToken(false), 2000);
   };
@@ -62,7 +53,21 @@ export default function SettingsPage() {
   };
 
   const maskedToken =
-    mockApiToken.slice(0, 8) + "•".repeat(24) + mockApiToken.slice(-4);
+    sessionToken.slice(0, 8) + "•".repeat(24) + sessionToken.slice(-4);
+
+  const cliSteps = [
+    { label: "Install CLI", command: "npm install -g orionpulse-cli" },
+    { label: "Authenticate CLI", command: `orionpulse login <your_token>` },
+    { label: "Start Monitoring Agent", command: "orionpulse start" },
+  ];
+
+  if (!user) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center text-muted-foreground text-sm">
+        Loading user settings profile...
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -74,8 +79,10 @@ export default function SettingsPage() {
               <User className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle>Profile</CardTitle>
-              <CardDescription>Your account information</CardDescription>
+              <CardTitle>Profile Details</CardTitle>
+              <CardDescription>
+                Your registered account credentials
+              </CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -86,23 +93,23 @@ export default function SettingsPage() {
                 Username
               </label>
               <p className="mt-1 text-sm font-medium text-foreground">
-                {mockUser.username}
+                {user.username}
               </p>
             </div>
             <div>
               <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                Email
+                Email Address
               </label>
               <p className="mt-1 text-sm font-medium text-foreground">
-                {mockUser.email}
+                {user.email}
               </p>
             </div>
             <div>
               <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                Member Since
+                Account Created
               </label>
               <p className="mt-1 text-sm text-muted-foreground">
-                {formatDate(mockUser.createdAt)}
+                {formatDate(user.createdAt)}
               </p>
             </div>
           </div>
@@ -117,9 +124,10 @@ export default function SettingsPage() {
               <Key className="h-5 w-5 text-accent" />
             </div>
             <div>
-              <CardTitle>API Token</CardTitle>
+              <CardTitle>API Access Token</CardTitle>
               <CardDescription>
-                Used to authenticate CLI connections
+                Use this token to connect your terminal manually. Keep it
+                secure.
               </CardDescription>
             </div>
           </div>
@@ -127,7 +135,7 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-4 py-3">
             <code className="flex-1 text-sm font-mono text-foreground break-all">
-              {tokenVisible ? mockApiToken : maskedToken}
+              {tokenVisible ? sessionToken : maskedToken}
             </code>
             <Button
               variant="ghost"
@@ -154,14 +162,6 @@ export default function SettingsPage() {
               )}
             </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setRegenDialogOpen(true)}
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Regenerate Token
-          </Button>
         </CardContent>
       </Card>
 
@@ -173,22 +173,22 @@ export default function SettingsPage() {
               <Terminal className="h-5 w-5 text-success" />
             </div>
             <div>
-              <CardTitle>CLI Connection</CardTitle>
+              <CardTitle>CLI Node Integration</CardTitle>
               <CardDescription>
-                Connect your local terminal to OrionPulse
+                Run these commands in your server's terminal to start telemetry.
               </CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {cliSteps.map((step, index) => (
-              <div key={step.label}>
-                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+              <div key={step.label} className="space-y-1.5">
+                <label className="block text-xs font-medium text-muted-foreground">
                   {index + 1}. {step.label}
                 </label>
                 <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-4 py-2.5">
-                  <code className="flex-1 font-mono text-sm text-foreground">
+                  <code className="flex-1 font-mono text-xs text-foreground break-all whitespace-pre-wrap">
                     {step.command}
                   </code>
                   <Button
@@ -249,36 +249,14 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Regenerate Token Dialog */}
-      <Dialog open={regenDialogOpen} onOpenChange={setRegenDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Regenerate API Token</DialogTitle>
-            <DialogDescription>
-              This will invalidate your current token. All connected CLI
-              instances will need to re-authenticate.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRegenDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={() => setRegenDialogOpen(false)}>
-              <RefreshCw className="h-4 w-4" />
-              Regenerate
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Delete Account Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Account</DialogTitle>
+            <DialogTitle>Delete Account Permanently</DialogTitle>
             <DialogDescription>
-              This action is permanent and cannot be undone. All your data,
-              servers, ports, and scan logs will be permanently deleted.
+              This action is permanent and cannot be undone. All your servers,
+              ports, and scan logs will be permanently deleted.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

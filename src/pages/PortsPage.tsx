@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { RefreshCw, Trash2, Plus, Search } from "lucide-react";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { useMonitorStore } from "@/stores/monitorStore";
+import { portsAPI } from "@/lib/api";
 import {
   Dialog,
   DialogContent,
@@ -13,70 +15,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import type { Port } from "@/types";
-
-const mockPorts: Port[] = [
-  {
-    id: "p1",
-    portNumber: 3000,
-    protocol: "TCP",
-    label: "React Dev Server",
-    status: "open",
-    serverId: "1",
-    lastChecked: new Date(Date.now() - 10000).toISOString(),
-    responseTime: 12,
-  },
-  {
-    id: "p2",
-    portNumber: 8080,
-    protocol: "TCP",
-    label: "Express API",
-    status: "open",
-    serverId: "2",
-    lastChecked: new Date(Date.now() - 10000).toISOString(),
-    responseTime: 0,
-  },
-  {
-    id: "p3",
-    portNumber: 5432,
-    protocol: "TCP",
-    label: "PostgreSQL",
-    status: "closed",
-    serverId: "3",
-    lastChecked: new Date(Date.now() - 10000).toISOString(),
-    responseTime: 0,
-  },
-  {
-    id: "p4",
-    portNumber: 3306,
-    protocol: "TCP",
-    label: "MySQL",
-    status: "filtered",
-    serverId: "3",
-    lastChecked: new Date(Date.now() - 15000).toISOString(),
-    responseTime: 0,
-  },
-  {
-    id: "p5",
-    portNumber: 6379,
-    protocol: "TCP",
-    label: "Redis Cache",
-    status: "open",
-    serverId: "2",
-    lastChecked: new Date(Date.now() - 8000).toISOString(),
-    responseTime: 5,
-  },
-  {
-    id: "p6",
-    portNumber: 27017,
-    protocol: "TCP",
-    label: "MongoDB",
-    status: "open",
-    serverId: "3",
-    lastChecked: new Date(Date.now() - 12000).toISOString(),
-    responseTime: 18,
-  },
-];
 
 const statusConfig = {
   open: { variant: "success" as const, label: "Open" },
@@ -87,16 +25,47 @@ const statusConfig = {
 const filters = ["All", "Open", "Closed", "Filtered"] as const;
 
 export default function PortsPage() {
+  const {
+    servers,
+    ports,
+    fetchPorts,
+    addPort,
+    removePort,
+    selectedServerId,
+    setSelectedServer,
+    fetchServers,
+  } = useMonitorStore();
+
   const [activeFilter, setActiveFilter] = useState<string>("All");
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [scanningId, setScanningId] = useState<string | null>(null);
   const [newPort, setNewPort] = useState({
     portNumber: "",
     protocol: "TCP" as "TCP" | "UDP",
     label: "",
   });
 
-  const filteredPorts = mockPorts.filter((port) => {
+  // 1. Fetch servers on load
+  useEffect(() => {
+    fetchServers();
+  }, [fetchServers]);
+
+  // 2. Select first server by default if none selected
+  useEffect(() => {
+    if (servers.length > 0 && !selectedServerId) {
+      setSelectedServer(servers[0].id);
+    }
+  }, [servers, selectedServerId, setSelectedServer]);
+
+  // 3. Fetch ports when selected server changes
+  useEffect(() => {
+    if (selectedServerId) {
+      fetchPorts(selectedServerId);
+    }
+  }, [selectedServerId, fetchPorts]);
+
+  const filteredPorts = ports.filter((port) => {
     const matchesFilter =
       activeFilter === "All" || port.status === activeFilter.toLowerCase();
     const matchesSearch =
@@ -106,17 +75,69 @@ export default function PortsPage() {
     return matchesFilter && matchesSearch;
   });
 
-  const handleAddPort = () => {
-    // In production, this would call the API
-    setDialogOpen(false);
-    setNewPort({ portNumber: "", protocol: "TCP", label: "" });
+  const handleAddPort = async () => {
+    if (!selectedServerId) return;
+    const portNum = parseInt(newPort.portNumber);
+    if (isNaN(portNum) || !newPort.label) return;
+
+    try {
+      await addPort(selectedServerId, {
+        portNumber: portNum,
+        protocol: newPort.protocol,
+        label: newPort.label,
+      });
+      setDialogOpen(false);
+      setNewPort({ portNumber: "", protocol: "TCP", label: "" });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleScanPort = async (id: string) => {
+    setScanningId(id);
+    try {
+      await portsAPI.scan(id);
+      // Briefly show scan active state, socket events will trigger data refresh
+      setTimeout(() => setScanningId(null), 1000);
+    } catch (err) {
+      console.error("Failed to trigger instant scan", err);
+      setScanningId(null);
+    }
+  };
+
+  const handleDeletePort = async (id: string) => {
+    if (confirm("Are you sure you want to stop monitoring this port?")) {
+      try {
+        await removePort(id);
+      } catch (err) {
+        console.error("Failed to delete port", err);
+      }
+    }
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-fade-in">
-        <h1 className="text-2xl font-bold text-foreground">Port Monitoring</h1>
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-2xl font-bold text-foreground">Port Monitoring Center</h1>
+          {servers.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Select Active Server:</span>
+              <select
+                value={selectedServerId || ""}
+                onChange={(e) => setSelectedServer(e.target.value)}
+                className="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground focus:ring-1 focus:ring-primary focus:outline-none"
+              >
+                {servers.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} ({s.hostname})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -127,7 +148,7 @@ export default function PortsPage() {
               className="w-56 pl-9"
             />
           </div>
-          <Button onClick={() => setDialogOpen(true)}>
+          <Button onClick={() => setDialogOpen(true)} disabled={!selectedServerId}>
             <Plus className="h-4 w-4" />
             Add Port
           </Button>
@@ -161,7 +182,11 @@ export default function PortsPage() {
         style={{ animationDelay: "100ms" }}
       >
         {filteredPorts.map((port) => {
-          const cfg = statusConfig[port.status];
+          const cfg = statusConfig[port.status as keyof typeof statusConfig] || {
+            variant: "outline" as const,
+            label: port.status || "Offline",
+          };
+          const isScanning = scanningId === port.id;
           return (
             <Card key={port.id} className="group relative overflow-hidden">
               <CardContent className="p-5">
@@ -194,7 +219,7 @@ export default function PortsPage() {
                     <p className="text-xs text-muted-foreground">
                       Response:{" "}
                       <span className="font-mono text-foreground">
-                        {port.responseTime ? `${port.responseTime}ms` : "—"}
+                        {port.responseTime !== undefined && port.responseTime > 0 ? `${port.responseTime}ms` : "—"}
                       </span>
                     </p>
                     <p className="text-xs text-muted-foreground">
@@ -202,13 +227,20 @@ export default function PortsPage() {
                     </p>
                   </div>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <RefreshCw className="h-3.5 w-3.5" />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handleScanPort(port.id)}
+                      disabled={isScanning}
+                    >
+                      <RefreshCw className={cn("h-3.5 w-3.5", isScanning && "animate-spin")} />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => handleDeletePort(port.id)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -224,7 +256,7 @@ export default function PortsPage() {
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
           <Search className="mb-3 h-10 w-10 opacity-40" />
           <p className="text-lg font-medium">No ports found</p>
-          <p className="text-sm">Try adjusting your search or filter.</p>
+          <p className="text-sm">Try adjusting your search or check that your agent is running.</p>
         </div>
       )}
 
