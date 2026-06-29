@@ -8,6 +8,8 @@ import LogsPage from "@/pages/LogsPage";
 import AIInsightsPage from "@/pages/AIInsightsPage";
 import SettingsPage from "@/pages/SettingsPage";
 
+import { useEffect } from "react";
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   if (!isAuthenticated) return <Navigate to="/login" replace />;
@@ -15,6 +17,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+  const loadUser = useAuthStore((s) => s.loadUser);
+
+  useEffect(() => {
+    loadUser();
+  }, [loadUser]);
+
   return (
     <BrowserRouter>
       <Routes>
@@ -23,9 +31,9 @@ function App() {
         <Route
           path="/"
           element={
-            <>
+            <ProtectedRoute>
               <DashboardLayout />
-            </>
+            </ProtectedRoute>
           }
         >
           <Route index element={<DashboardPage />} />
@@ -34,6 +42,7 @@ function App() {
           <Route path="ai-insights" element={<AIInsightsPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
