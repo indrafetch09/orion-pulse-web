@@ -1,11 +1,11 @@
 import { intro, outro, spinner, log } from "@clack/prompts";
 import { probePort } from "../utils/ping.js";
 
-const DEFAULT_PORTS = [22, 80, 443, 3000, 3306, 5173, 5432, 8080, 27017];
+const DEFAULT_PORTS = [22, 80, 443, 3000, 3306, 5173, 5432, 8080, 27017, 8081];
 
 /**
  * Executes a manual quick scan against default local ports.
- * 
+ *
  * @param {string} [host="127.0.0.1"] - Host to target scan
  */
 export async function scanCommand(host = "127.0.0.1") {
@@ -23,7 +23,7 @@ export async function scanCommand(host = "127.0.0.1") {
   });
 
   await Promise.all(probes);
-  
+
   // Sort results by port number ascending
   results.sort((a, b) => a.port - b.port);
 
@@ -44,7 +44,9 @@ export async function scanCommand(host = "127.0.0.1") {
     }
 
     const latencyText = res.status === "open" ? `${res.responseTime}ms` : "-";
-    console.log(`  ${res.port.toString().padEnd(8)} ${statusText}    ${latencyText}`);
+    console.log(
+      `  ${res.port.toString().padEnd(8)} ${statusText}    ${latencyText}`,
+    );
   }
   console.log("");
 
