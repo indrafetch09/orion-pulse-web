@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { Link, Outlet, useLocation, useNavigate } from 'react-router'
+import { useState, useMemo } from "react";
+import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import {
   Activity,
   LayoutDashboard,
@@ -12,12 +12,12 @@ import {
   LogOut,
   ChevronLeft,
   User,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { Sheet } from '@/components/ui/sheet'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Sheet } from "@/components/ui/sheet";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -25,39 +25,39 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuLabel,
-} from '@/components/ui/dropdown-menu'
-import { useSocket } from '@/hooks/useSocket'
-import { useAuthStore } from '@/stores/authStore'
+} from "@/components/ui/dropdown-menu";
+import { useSocket } from "@/hooks/useSocket";
+import { useAuthStore } from "@/stores/authStore";
 
 const navItems = [
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
-  { label: 'Ports', icon: Network, path: '/ports' },
-  { label: 'Logs', icon: ScrollText, path: '/logs' },
-  { label: 'AI Insights', icon: Brain, path: '/ai-insights' },
-  { label: 'Settings', icon: Settings, path: '/settings' },
-]
+  { label: "Dashboard", icon: LayoutDashboard, path: "/" },
+  { label: "Ports", icon: Network, path: "/ports" },
+  { label: "Logs", icon: ScrollText, path: "/logs" },
+  { label: "AI Insights", icon: Brain, path: "/ai-insights" },
+  { label: "Settings", icon: Settings, path: "/settings" },
+];
 
 function getPageTitle(pathname: string): string {
-  if (pathname === '/') return 'Dashboard'
-  const item = navItems.find((n) => n.path === pathname)
-  return item?.label ?? 'OrionPulse'
+  if (pathname === "/") return "Dashboard";
+  const item = navItems.find((n) => n.path === pathname);
+  return item?.label ?? "OrionPulse";
 }
 
 function SidebarContent({
   collapsed,
   onNavigate,
 }: {
-  collapsed: boolean
-  onNavigate?: () => void
+  collapsed: boolean;
+  onNavigate?: () => void;
 }) {
-  const location = useLocation()
-  const { isConnected } = useSocket()
+  const location = useLocation();
+  const { isConnected } = useSocket();
 
   return (
     <div className="flex h-full flex-col">
       {/* Branding */}
       <div className="flex items-center gap-3 px-4 py-6">
-        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent">
+        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary">
           <Activity className="h-5 w-5 text-white" />
         </div>
         {!collapsed && (
@@ -79,30 +79,34 @@ function SidebarContent({
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navItems.map((item) => {
           const isActive =
-            item.path === '/'
-              ? location.pathname === '/'
-              : location.pathname.startsWith(item.path)
+            item.path === "/"
+              ? location.pathname === "/"
+              : location.pathname.startsWith(item.path);
           return (
             <Link
               key={item.path}
               to={item.path}
               onClick={onNavigate}
               className={cn(
-                'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
                 isActive
-                  ? 'border-l-2 border-primary bg-muted text-foreground shadow-sm'
-                  : 'border-l-2 border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                  ? "border-l-2 border-primary bg-muted text-foreground shadow-sm"
+                  : "border-l-2 border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground",
               )}
             >
               <item.icon
                 className={cn(
-                  'h-5 w-5 shrink-0 transition-colors',
-                  isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
+                  "h-5 w-5 shrink-0 transition-colors",
+                  isActive
+                    ? "text-primary"
+                    : "text-muted-foreground group-hover:text-foreground",
                 )}
               />
-              {!collapsed && <span className="whitespace-nowrap">{item.label}</span>}
+              {!collapsed && (
+                <span className="whitespace-nowrap">{item.label}</span>
+              )}
             </Link>
-          )
+          );
         })}
       </nav>
 
@@ -112,46 +116,51 @@ function SidebarContent({
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span
             className={cn(
-              'h-2 w-2 rounded-full',
-              isConnected ? 'bg-success shadow-[0_0_6px] shadow-success/50' : 'bg-destructive shadow-[0_0_6px] shadow-destructive/50'
+              "h-2 w-2 rounded-full",
+              isConnected
+                ? "bg-success shadow-[0_0_6px] shadow-success/50"
+                : "bg-destructive shadow-[0_0_6px] shadow-destructive/50",
             )}
           />
           {!collapsed && (
-            <span>{isConnected ? 'Socket Connected' : 'Disconnected'}</span>
+            <span>{isConnected ? "Socket Connected" : "Disconnected"}</span>
           )}
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default function DashboardLayout() {
-  const [collapsed, setCollapsed] = useState(false)
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const location = useLocation()
-  const navigate = useNavigate()
-  const logout = useAuthStore((s) => s.logout)
-  const user = useAuthStore((s) => s.user)
-  const { alerts } = useSocket()
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const logout = useAuthStore((s) => s.logout);
+  const user = useAuthStore((s) => s.user);
+  const { alerts } = useSocket();
 
-  const pageTitle = useMemo(() => getPageTitle(location.pathname), [location.pathname])
+  const pageTitle = useMemo(
+    () => getPageTitle(location.pathname),
+    [location.pathname],
+  );
 
   const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
+    logout();
+    navigate("/login");
+  };
 
   const userInitials = user?.username
     ? user.username.slice(0, 2).toUpperCase()
-    : 'OP'
+    : "OP";
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Desktop Sidebar */}
       <aside
         className={cn(
-          'hidden md:flex flex-col glass border-r border-border transition-all duration-300 ease-in-out shrink-0',
-          collapsed ? 'w-[68px]' : 'w-60'
+          "hidden md:flex flex-col glass border-r border-border transition-all duration-300 ease-in-out shrink-0",
+          collapsed ? "w-[68px]" : "w-60",
         )}
       >
         <SidebarContent collapsed={collapsed} />
@@ -160,7 +169,10 @@ export default function DashboardLayout() {
       {/* Mobile Sidebar Sheet */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen} side="left">
         <div className="pt-12">
-          <SidebarContent collapsed={false} onNavigate={() => setMobileOpen(false)} />
+          <SidebarContent
+            collapsed={false}
+            onNavigate={() => setMobileOpen(false)}
+          />
         </div>
       </Sheet>
 
@@ -186,17 +198,19 @@ export default function DashboardLayout() {
               size="icon"
               className="hidden md:flex"
               onClick={() => setCollapsed(!collapsed)}
-              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               <ChevronLeft
                 className={cn(
-                  'h-5 w-5 transition-transform duration-300',
-                  collapsed && 'rotate-180'
+                  "h-5 w-5 transition-transform duration-300",
+                  collapsed && "rotate-180",
                 )}
               />
             </Button>
 
-            <h1 className="text-lg font-semibold text-foreground">{pageTitle}</h1>
+            <h1 className="text-lg font-semibold text-foreground">
+              {pageTitle}
+            </h1>
           </div>
 
           <div className="flex items-center gap-2">
@@ -206,7 +220,7 @@ export default function DashboardLayout() {
                 <Bell className="h-5 w-5" />
                 {alerts.length > 0 && (
                   <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
-                    {alerts.length > 9 ? '9+' : alerts.length}
+                    {alerts.length > 9 ? "9+" : alerts.length}
                   </span>
                 )}
               </DropdownMenuTrigger>
@@ -219,9 +233,14 @@ export default function DashboardLayout() {
                   </div>
                 ) : (
                   alerts.slice(0, 5).map((alert, i) => (
-                    <DropdownMenuItem key={i} className="flex-col items-start gap-1">
+                    <DropdownMenuItem
+                      key={i}
+                      className="flex-col items-start gap-1"
+                    >
                       <span className="text-xs font-medium">{alert.type}</span>
-                      <span className="text-xs text-muted-foreground">{alert.message}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {alert.message}
+                      </span>
                     </DropdownMenuItem>
                   ))
                 )}
@@ -232,23 +251,32 @@ export default function DashboardLayout() {
             <DropdownMenu>
               <DropdownMenuTrigger className="rounded-full">
                 <Avatar className="h-8 w-8 cursor-pointer">
-                  <AvatarFallback className="text-xs">{userInitials}</AvatarFallback>
+                  <AvatarFallback className="text-xs">
+                    {userInitials}
+                  </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuLabel>
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium text-foreground">{user?.username ?? 'User'}</span>
-                    <span className="text-xs text-muted-foreground">{user?.email ?? ''}</span>
+                    <span className="text-sm font-medium text-foreground">
+                      {user?.username ?? "User"}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {user?.email ?? ""}
+                    </span>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/settings')}>
+                <DropdownMenuItem onClick={() => navigate("/settings")}>
                   <User className="h-4 w-4" />
                   Profile & Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="text-destructive"
+                >
                   <LogOut className="h-4 w-4" />
                   Log out
                 </DropdownMenuItem>
@@ -263,5 +291,5 @@ export default function DashboardLayout() {
         </main>
       </div>
     </div>
-  )
+  );
 }
