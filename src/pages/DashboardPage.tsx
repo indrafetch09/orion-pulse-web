@@ -82,7 +82,7 @@ export default function DashboardPage() {
           );
           const logsResponses = await Promise.all(logsPromises);
           const allLogs: PortLog[] = logsResponses.flatMap(
-            (res) => res.data.data,
+            (res) => res.data.data?.logs || [],
           );
 
           // D. Sort logs descending by checkedAt time
