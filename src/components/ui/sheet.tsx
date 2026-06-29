@@ -1,26 +1,26 @@
-import * as React from 'react'
-import { createPortal } from 'react-dom'
-import { cn } from '@/lib/utils'
-import { X } from 'lucide-react'
+import * as React from "react";
+import { createPortal } from "react-dom";
+import { cn } from "@/lib/utils";
+import { X } from "lucide-react";
 
 interface SheetProps {
-  children: React.ReactNode
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  side?: 'left' | 'right'
+  children: React.ReactNode;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  side?: "left" | "right";
 }
 
-function Sheet({ children, open, onOpenChange, side = 'left' }: SheetProps) {
+function Sheet({ children, open, onOpenChange, side = "left" }: SheetProps) {
   React.useEffect(() => {
     if (open) {
-      document.body.style.overflow = 'hidden'
+      document.body.style.overflow = "hidden";
     }
     return () => {
-      document.body.style.overflow = ''
-    }
-  }, [open])
+      document.body.style.overflow = "";
+    };
+  }, [open]);
 
-  if (!open) return null
+  if (!open) return null;
 
   return createPortal(
     <div className="fixed inset-0 z-50">
@@ -30,10 +30,10 @@ function Sheet({ children, open, onOpenChange, side = 'left' }: SheetProps) {
       />
       <div
         className={cn(
-          'fixed top-0 bottom-0 z-50 w-72 glass-strong shadow-2xl',
-          side === 'left'
-            ? 'left-0 animate-slide-in-left'
-            : 'right-0 animate-slide-in-right'
+          "fixed top-0 bottom-0 z-50 w-72 glass-strong shadow-2xl",
+          side === "left"
+            ? "left-0 animate-slide-in-left"
+            : "right-0 animate-slide-in-right",
         )}
       >
         <button
@@ -45,8 +45,8 @@ function Sheet({ children, open, onOpenChange, side = 'left' }: SheetProps) {
         {children}
       </div>
     </div>,
-    document.body
-  )
+    document.body,
+  );
 }
 
-export { Sheet }
+export { Sheet };

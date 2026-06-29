@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   RefreshCw,
   Trash2,
@@ -10,6 +10,9 @@ import { cn, formatRelativeTime } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useMonitorStore } from "@/stores/monitorStore";
+import { logsAPI } from "@/lib/api";
+import type { PortLog } from "@/types";
 import {
   Dialog,
   DialogContent,
@@ -18,19 +21,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import type { PortLog } from "@/types";
-
-const mockLogs: PortLog[] = Array.from({ length: 20 }, (_, i) => ({
-  id: `log-${i}`,
-  portId: `p${(i % 4) + 1}`,
-  portNumber: [3000, 8080, 5432, 3306][i % 4],
-  status: (["open", "open", "closed", "open", "filtered", "open"] as const)[
-    i % 6
-  ],
-  responseTime: Math.floor(Math.random() * 50) + 5,
-  checkedAt: new Date(Date.now() - i * 30000).toISOString(),
-  errorMessage: i % 5 === 0 ? "Connection timeout" : undefined,
-}));
 
 const statusConfig = {
   open: { variant: "success" as const, label: "Open" },
@@ -39,25 +29,107 @@ const statusConfig = {
 };
 
 const statusFilters = ["All", "Open", "Closed", "Filtered"] as const;
-const portFilters = ["All", 3000, 8080, 5432, 3306] as const;
-
 const ITEMS_PER_PAGE = 10;
 
 export default function LogsPage() {
+  const {
+    servers,
+    ports,
+    fetchPorts,
+    selectedServerId,
+    setSelectedServer,
+    fetchServers,
+  } = useMonitorStore();
+
   const [statusFilter, setStatusFilter] = useState<string>("All");
-  const [portFilter, setPortFilter] = useState<number | "All">("All");
+  const [portFilter, setPortFilter] = useState<string>("All"); // "All" or portId string
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [rawLogs, setRawLogs] = useState<PortLog[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  // 1. Fetch servers on load
+  useEffect(() => {
+    fetchServers();
+  }, [fetchServers]);
+
+  // 2. Select first server by default if none selected
+  useEffect(() => {
+    if (servers.length > 0 && !selectedServerId) {
+      setSelectedServer(servers[0].id);
+    }
+  }, [servers, selectedServerId, setSelectedServer]);
+
+  // 3. Fetch ports when selected server changes
+  useEffect(() => {
+    if (selectedServerId) {
+      fetchPorts(selectedServerId);
+      setPortFilter("All");
+      setPage(1);
+    }
+  }, [selectedServerId, fetchPorts]);
+
+  // 4. Fetch logs based on server/port filter
+  useEffect(() => {
+    let active = true;
+    const loadLogs = async () => {
+      if (!selectedServerId) return;
+      setLoading(true);
+      try {
+        if (portFilter !== "All") {
+          // Fetch specifically for this port
+          const res = await logsAPI.getAll(portFilter, { limit: 100 });
+          if (active) setRawLogs(res.data.data);
+        } else {
+          // Fetch for all ports of this server and merge
+          if (ports.length > 0) {
+            const logsPromises = ports.map((port) =>
+              logsAPI.getAll(port.id, { limit: 30 })
+            );
+            const logsResponses = await Promise.all(logsPromises);
+            const allLogs: PortLog[] = logsResponses.flatMap(
+              (res) => res.data.data
+            );
+            // Sort combined logs descending
+            allLogs.sort(
+              (a, b) =>
+                new Date(b.checkedAt).getTime() - new Date(a.checkedAt).getTime()
+            );
+            if (active) setRawLogs(allLogs);
+          } else {
+            if (active) setRawLogs([]);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load logs", err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    loadLogs();
+
+    // Setup auto-refresh polling every 5s if enabled
+    let pollInterval: any = null;
+    if (autoRefresh) {
+      pollInterval = setInterval(loadLogs, 5000);
+    }
+
+    return () => {
+      active = false;
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [selectedServerId, ports, portFilter, autoRefresh, reloadKey]);
 
   const filteredLogs = useMemo(() => {
-    return mockLogs.filter((log) => {
-      const matchesStatus =
-        statusFilter === "All" || log.status === statusFilter.toLowerCase();
-      const matchesPort = portFilter === "All" || log.portNumber === portFilter;
-      return matchesStatus && matchesPort;
+    return rawLogs.filter((log) => {
+      return (
+        statusFilter === "All" || log.status === statusFilter.toLowerCase()
+      );
     });
-  }, [statusFilter, portFilter]);
+  }, [rawLogs, statusFilter]);
 
   const totalPages = Math.max(
     1,
@@ -68,11 +140,44 @@ export default function LogsPage() {
     page * ITEMS_PER_PAGE,
   );
 
+  const handleClearLogs = async () => {
+    try {
+      if (portFilter !== "All") {
+        await logsAPI.clear(portFilter);
+      } else {
+        await Promise.all(ports.map((p) => logsAPI.clear(p.id)));
+      }
+      setClearDialogOpen(false);
+      setRawLogs([]);
+      setReloadKey((prev) => prev + 1);
+    } catch (err) {
+      console.error("Failed to clear logs", err);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-fade-in">
-        <h1 className="text-2xl font-bold text-foreground">Scan Logs</h1>
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-2xl font-bold text-foreground">Scan Log History</h1>
+          {servers.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Server:</span>
+              <select
+                value={selectedServerId || ""}
+                onChange={(e) => setSelectedServer(e.target.value)}
+                className="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground focus:ring-1 focus:ring-primary focus:outline-none"
+              >
+                {servers.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} ({s.hostname})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setAutoRefresh(!autoRefresh)}
@@ -93,6 +198,7 @@ export default function LogsPage() {
             variant="outline"
             size="sm"
             onClick={() => setClearDialogOpen(true)}
+            disabled={rawLogs.length === 0}
           >
             <Trash2 className="h-3.5 w-3.5" />
             Clear Logs
@@ -100,123 +206,109 @@ export default function LogsPage() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div
-        className="flex flex-wrap gap-4 animate-fade-in"
-        style={{ animationDelay: "50ms" }}
-      >
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            Status
-          </label>
-          <div className="flex gap-1.5">
-            {statusFilters.map((f) => (
+      {/* Filters Card */}
+      <Card className="animate-fade-in" style={{ animationDelay: "50ms" }}>
+        <CardContent className="p-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-2">
+            {statusFilters.map((filter) => (
               <button
-                key={f}
+                key={filter}
                 onClick={() => {
-                  setStatusFilter(f);
+                  setStatusFilter(filter);
                   setPage(1);
                 }}
                 className={cn(
-                  "rounded-full px-3 py-1 text-xs font-medium transition-all cursor-pointer",
-                  statusFilter === f
+                  "rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200 cursor-pointer",
+                  statusFilter === filter
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:text-foreground",
                 )}
               >
-                {f}
+                {filter}
               </button>
             ))}
           </div>
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            Port
-          </label>
-          <div className="flex gap-1.5">
-            {portFilters.map((f) => (
-              <button
-                key={f}
-                onClick={() => {
-                  setPortFilter(f);
-                  setPage(1);
-                }}
-                className={cn(
-                  "rounded-full px-3 py-1 text-xs font-medium transition-all cursor-pointer font-mono",
-                  portFilter === f
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {f === "All" ? "All" : f}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
 
-      {/* Log Table */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Filter by Port:</span>
+            <select
+              value={portFilter}
+              onChange={(e) => {
+                setPortFilter(e.target.value);
+                setPage(1);
+              }}
+              className="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground focus:ring-1 focus:ring-primary focus:outline-none"
+            >
+              <option value="All">All Ports</option>
+              {ports.map((port) => (
+                <option key={port.id} value={port.id}>
+                  Port {port.portNumber} ({port.label})
+                </option>
+              ))}
+            </select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Logs Table */}
       <Card className="animate-fade-in" style={{ animationDelay: "100ms" }}>
         <CardContent className="p-0">
-          {paginatedLogs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-              <AlertCircle className="mb-3 h-10 w-10 opacity-40" />
-              <p className="text-lg font-medium">No logs found</p>
-              <p className="text-sm">No scan logs match the current filters.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
+          <div className="overflow-x-auto">
+            {paginatedLogs.length > 0 ? (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border text-left text-xs uppercase text-muted-foreground">
-                    <th className="px-5 py-3">Time</th>
-                    <th className="px-5 py-3">Port</th>
-                    <th className="px-5 py-3">Status</th>
-                    <th className="px-5 py-3">Response Time</th>
-                    <th className="px-5 py-3">Error</th>
+                    <th className="p-4">Time</th>
+                    <th className="p-4">Port Number</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4">Response Latency</th>
+                    <th className="p-4">Error / Diagnostic Message</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {paginatedLogs.map((log) => {
-                    const cfg = statusConfig[log.status];
+                    const cfg = statusConfig[log.status as keyof typeof statusConfig] || {
+                      variant: "outline" as const,
+                      label: log.status || "Offline",
+                    };
                     return (
-                      <tr
-                        key={log.id}
-                        className={cn(
-                          "transition-colors hover:bg-muted/30",
-                          (log.status === "closed" ||
-                            log.status === "filtered") &&
-                            "border-l-2",
-                          log.status === "closed" && "border-l-destructive/50",
-                          log.status === "filtered" && "border-l-warning/50",
-                        )}
-                      >
-                        <td className="px-5 py-3 text-muted-foreground">
+                      <tr key={log.id} className="hover:bg-muted/30">
+                        <td className="p-4 text-muted-foreground">
                           {formatRelativeTime(log.checkedAt)}
                         </td>
-                        <td className="px-5 py-3 font-mono font-medium text-foreground">
+                        <td className="p-4 font-mono font-medium text-foreground">
                           {log.portNumber}
                         </td>
-                        <td className="px-5 py-3">
+                        <td className="p-4">
                           <Badge variant={cfg.variant}>{cfg.label}</Badge>
                         </td>
-                        <td className="px-5 py-3 font-mono text-muted-foreground">
-                          {log.responseTime > 0 ? `${log.responseTime}ms` : "—"}
+                        <td className="p-4 text-muted-foreground">
+                          {log.responseTime > 0
+                            ? `${log.responseTime}ms`
+                            : "—"}
                         </td>
-                        <td className="px-5 py-3 text-xs text-destructive">
-                          {log.errorMessage ?? "—"}
+                        <td className="p-4 text-xs text-destructive">
+                          {log.errorMessage || "—"}
                         </td>
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
-            </div>
-          )}
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                <AlertCircle className="mb-3 h-10 w-10 opacity-40" />
+                <p className="text-lg font-medium">No logs available</p>
+                <p className="text-sm">
+                  {loading ? "Loading logs..." : "Ensure your telemetry daemon is running and scanning ports."}
+                </p>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
-      {/* Pagination */}
+      {/* Pagination Footer */}
       {filteredLogs.length > ITEMS_PER_PAGE && (
         <div className="flex items-center justify-between animate-fade-in">
           <p className="text-xs text-muted-foreground">
@@ -254,10 +346,10 @@ export default function LogsPage() {
       <Dialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Clear All Logs</DialogTitle>
+            <DialogTitle>Clear History Logs</DialogTitle>
             <DialogDescription>
-              This action cannot be undone. All scan logs will be permanently
-              deleted.
+              This action cannot be undone. All port scan history logs will be permanently
+              purged from the database.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -266,10 +358,10 @@ export default function LogsPage() {
             </Button>
             <Button
               variant="destructive"
-              onClick={() => setClearDialogOpen(false)}
+              onClick={handleClearLogs}
             >
               <Trash2 className="h-4 w-4" />
-              Delete All Logs
+              Delete Logs
             </Button>
           </DialogFooter>
         </DialogContent>

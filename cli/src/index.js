@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 import { Command } from "commander";
 import { loginCommand } from "./commands/login.js";
+import { scanCommand } from "./commands/scan.js";
+import { startCommand } from "./commands/start.js";
 import { writeConfig, readConfig, clearConfig } from "./services/config.js";
 import { intro, outro, spinner, note, cancel, log } from "@clack/prompts";
 import axios from "axios";
@@ -98,32 +100,19 @@ program
     }
   });
 
-// Placeholder start command (will be fully coded in telemetry task)
 program
   .command("start")
   .description("Start the background monitoring telemetry daemon agent")
-  .action(() => {
-    intro("OrionPulse - Telemetry Daemon");
-    log.info("Running telemetry agent...");
-    note(
-      "Coming soon: Dispatching port status logs every 10s and heartbeats every 30s.",
-      "Daemon Status",
-    );
-    outro("Press Ctrl+C to stop.");
+  .action(async () => {
+    await startCommand();
   });
 
-// Placeholder scan command (will be fully coded in scanning task)
 program
   .command("scan")
   .description("Perform instant manual scan of local ports")
-  .action(() => {
-    intro("OrionPulse - Manual Port Scan");
-    log.step("Performing quick manual scan...");
-    note(
-      "Coming soon: Instant local socket connection scanning.",
-      "Scan Results",
-    );
-    outro("Scan completed.");
+  .argument("[host]", "Target host to scan (default: 127.0.0.1)")
+  .action(async (host) => {
+    await scanCommand(host);
   });
 
 program.parse(process.argv);
