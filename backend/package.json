@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "seed": "bun src/seed.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.13.0",
