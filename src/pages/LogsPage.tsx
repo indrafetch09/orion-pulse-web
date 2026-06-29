@@ -81,7 +81,7 @@ export default function LogsPage() {
         if (portFilter !== "All") {
           // Fetch specifically for this port
           const res = await logsAPI.getAll(portFilter, { limit: 100 });
-          if (active) setRawLogs(res.data.data);
+          if (active) setRawLogs(res.data.data?.logs || []);
         } else {
           // Fetch for all ports of this server and merge
           if (ports.length > 0) {
@@ -90,7 +90,7 @@ export default function LogsPage() {
             );
             const logsResponses = await Promise.all(logsPromises);
             const allLogs: PortLog[] = logsResponses.flatMap(
-              (res) => res.data.data
+              (res) => res.data.data?.logs || []
             );
             // Sort combined logs descending
             allLogs.sort(
