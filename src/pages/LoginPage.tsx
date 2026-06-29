@@ -64,48 +64,11 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
-      {/* Animated background gradients */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div
-          className="absolute -left-1/4 -top-1/4 h-[600px] w-[600px] rounded-full opacity-20 blur-[120px]"
-          style={{
-            background:
-              "radial-gradient(circle, oklch(0.65 0.25 260) 0%, transparent 70%)",
-            animation: "float-slow 20s ease-in-out infinite",
-          }}
-        />
-        <div
-          className="absolute -bottom-1/4 -right-1/4 h-[500px] w-[500px] rounded-full opacity-15 blur-[100px]"
-          style={{
-            background:
-              "radial-gradient(circle, oklch(0.65 0.20 310) 0%, transparent 70%)",
-            animation: "float-slow 25s ease-in-out infinite reverse",
-          }}
-        />
-        <div
-          className="absolute left-1/3 top-1/2 h-[400px] w-[400px] rounded-full opacity-10 blur-[80px]"
-          style={{
-            background:
-              "radial-gradient(circle, oklch(0.75 0.18 160) 0%, transparent 70%)",
-            animation: "float-slow 15s ease-in-out infinite 5s",
-          }}
-        />
-      </div>
-
-      <style>{`
-        @keyframes float-slow {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          25% { transform: translate(30px, -40px) scale(1.05); }
-          50% { transform: translate(-20px, 20px) scale(0.95); }
-          75% { transform: translate(40px, 30px) scale(1.02); }
-        }
-      `}</style>
-
       <Card className="relative z-10 w-full max-w-md glass-strong animate-fade-in">
         <CardHeader className="items-center text-center">
           {/* Branding */}
           <div className="mb-2 flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/20">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/20">
               <Activity className="h-7 w-7 text-white" />
             </div>
             <div className="text-left">
@@ -198,7 +161,7 @@ export default function LoginPage() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="admin@orionpulse.io"
+                    placeholder="Your Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -217,7 +180,7 @@ export default function LoginPage() {
                     <Input
                       id="username"
                       type="text"
-                      placeholder="admin"
+                      placeholder="Your Username"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       required
@@ -244,6 +207,7 @@ export default function LoginPage() {
                       isRegister ? "new-password" : "current-password"
                     }
                   />
+                  <div className=""></div>
                 </div>
               </div>
 
