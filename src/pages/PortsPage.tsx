@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
-import { RefreshCw, Trash2, Plus, Search } from "lucide-react";
+import {
+  RefreshCw,
+  Trash2,
+  Plus,
+  Search,
+  CheckCircle2Icon,
+} from "lucide-react";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +21,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Alert, AlertTitle } from "@/components/ui/alert";
 
 const statusConfig = {
   open: { variant: "success" as const, label: "Open" },
@@ -46,6 +53,7 @@ export default function PortsPage() {
     label: "",
   });
   const [formError, setFormError] = useState("");
+  const [successAlert, setSuccessAlert] = useState(false);
 
   // 1. Fetch servers on load
   useEffect(() => {
@@ -104,7 +112,10 @@ export default function PortsPage() {
       });
       setDialogOpen(false);
       setNewPort({ portNumber: "", protocol: "TCP", label: "" });
-      alert("Port successfully added!");
+      setSuccessAlert(true);
+      setTimeout(() => {
+        setSuccessAlert(false);
+      }, 5000);
     } catch (err) {
       console.error(err);
       setFormError("Failed to add port. Please try again.");
@@ -179,7 +190,6 @@ export default function PortsPage() {
           </Button>
         </div>
       </div>
-
       {/* Filter Pills */}
       <div
         className="flex gap-2 animate-fade-in"
@@ -200,7 +210,6 @@ export default function PortsPage() {
           </button>
         ))}
       </div>
-
       {/* Port Cards Grid */}
       <div
         className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 animate-fade-in"
@@ -287,6 +296,15 @@ export default function PortsPage() {
         })}
       </div>
 
+      {/*Alert */}
+      {successAlert && (
+        <Alert className="fixed bottom-6 right-6 z-[9999] bg-[var(--color-success)] text-background border-none max-w-xs w-full h-12 flex items-center justify-center gap-2 animate-toast">
+          <CheckCircle2Icon className="w-5 h-5" />
+          <AlertTitle className="m-0 text-sm font-medium">
+            Port successfully added!
+          </AlertTitle>
+        </Alert>
+      )}
       {filteredPorts.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
           <Search className="mb-3 h-10 w-10 opacity-40" />
@@ -296,15 +314,17 @@ export default function PortsPage() {
           </p>
         </div>
       )}
-
       {/* Add Port Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={(open) => {
-        setDialogOpen(open);
-        if (!open) {
-          setFormError("");
-          setNewPort({ portNumber: "", protocol: "TCP", label: "" });
-        }
-      }}>
+      <Dialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) {
+            setFormError("");
+            setNewPort({ portNumber: "", protocol: "TCP", label: "" });
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add New Port</DialogTitle>
