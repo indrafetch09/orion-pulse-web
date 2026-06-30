@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useMonitorStore } from "@/stores/monitorStore";
 import { logsAPI } from "@/lib/api";
+import { onNewPortLog } from "@/lib/socket";
 import type { PortLog } from "@/types";
 import {
   Dialog,
@@ -122,6 +123,32 @@ export default function LogsPage() {
       if (pollInterval) clearInterval(pollInterval);
     };
   }, [selectedServerId, ports, portFilter, autoRefresh, reloadKey]);
+
+  // Listen to live socket logs in real-time
+  useEffect(() => {
+    if (!selectedServerId) return;
+
+    const unsub = onNewPortLog((payload) => {
+      // Check if the log belongs to a port of our currently selected server
+      const targetPort = ports.find((p) => p.id === payload.portId);
+      if (!targetPort) return;
+
+      // Check if log is already in rawLogs list
+      setRawLogs((prev) => {
+        if (prev.some((l) => l.id === payload.log.id)) return prev;
+
+        // If filtering for a specific port, check if it matches the current filter
+        if (portFilter !== "All" && payload.portId !== portFilter) {
+          return prev;
+        }
+
+        const newRaw = [payload.log, ...prev];
+        return newRaw;
+      });
+    });
+
+    return () => unsub();
+  }, [selectedServerId, ports, portFilter]);
 
   const filteredLogs = useMemo(() => {
     return rawLogs.filter((log) => {
