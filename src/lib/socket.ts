@@ -24,6 +24,8 @@ export function connectSocket(token: string): Socket {
 
   socket.on("connect", () => {
     console.log("[OrionPulse] Socket connected");
+    // Join the dashboards room to receive real-time port/log/server broadcasts
+    socket?.emit("join-dashboard");
   });
 
   socket.on("disconnect", (reason) => {
@@ -64,8 +66,10 @@ export function onPortStatusChange(
   callback: (payload: { portId: string; result: PortScanResult }) => void,
 ): () => void {
   const updateListener = (payload: { serverId: string; port: any }) => {
+    const portId = payload.port?.id || payload.port?._id;
+    if (!portId) return;
     callback({
-      portId: payload.port.id,
+      portId,
       result: {
         portNumber: payload.port.portNumber,
         status: payload.port.status,
@@ -76,8 +80,10 @@ export function onPortStatusChange(
   };
 
   const logListener = (payload: { portId: string; log: any }) => {
+    const portId = payload.portId || payload.log?.portId || payload.log?.portId?._id;
+    if (!portId) return;
     callback({
-      portId: payload.portId,
+      portId,
       result: {
         portNumber: payload.log.portNumber,
         status: payload.log.status,
@@ -105,5 +111,28 @@ export function onAlert(
   socket?.on("alert", callback);
   return () => {
     socket?.off("alert", callback);
+  };
+}
+
+export function onNewPortLog(
+  callback: (payload: { portId: string; log: any }) => void,
+): () => void {
+  const listener = (payload: any) => {
+    callback({
+      portId: payload.portId,
+      log: {
+        id: payload.log?.id || payload.log?._id,
+        portId: payload.log?.portId,
+        portNumber: payload.log?.portNumber,
+        status: payload.log?.status,
+        responseTime: payload.log?.responseTime || 0,
+        checkedAt: payload.log?.checkedAt,
+        errorMessage: payload.log?.errorMessage || "",
+      },
+    });
+  };
+  socket?.on("new-port-log", listener);
+  return () => {
+    socket?.off("new-port-log", listener);
   };
 }
