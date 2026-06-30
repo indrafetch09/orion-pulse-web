@@ -29,7 +29,7 @@ export const getSolutions = async (
       serverId: { $in: serverIds },
       ...(portId ? { _id: new Types.ObjectId(portId as string) } : {}),
     };
-    const userPorts = await Port.find(portQuery, "_id");
+    const userPorts = await Port.find(portQuery, "_id portNumber");
     const portIds = userPorts.map((p) => p._id);
 
     // Find AI solutions that reference the user's ports
@@ -44,7 +44,7 @@ export const getSolutions = async (
 
     // Let's fetch solutions
     const solutions = await AISolution.find({
-      portNumber: { $in: userPorts.map((p) => p.portNumber) },
+      portNumber: { $in: userPorts.map((p) => p.portNumber).filter(Boolean) },
     })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
@@ -56,9 +56,12 @@ export const getSolutions = async (
 
     // Filter to ensure the populated portLog belongs to one of the user's ports
     // (This guarantees multi-tenant security)
-    const secureSolutions = solutions.filter((sol) => {
+    const secureSolutions = solutions.filter((sol: any) => {
       const log = sol.portLogId as unknown as IPortLog;
-      if (!log) return false;
+      if (!log) {
+        // Fallback for expired logs: verify the user monitors this port number
+        return userPorts.some((p) => p.portNumber === sol.portNumber);
+      }
       return portIds.some((pId) => pId.toString() === log.portId?.toString());
     });
 
