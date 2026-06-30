@@ -45,6 +45,7 @@ export default function PortsPage() {
     protocol: "TCP" as "TCP" | "UDP",
     label: "",
   });
+  const [formError, setFormError] = useState("");
 
   // 1. Fetch servers on load
   useEffect(() => {
@@ -76,20 +77,37 @@ export default function PortsPage() {
   });
 
   const handleAddPort = async () => {
+    setFormError("");
     if (!selectedServerId) return;
+
+    if (!newPort.portNumber) {
+      setFormError("Port Number is required");
+      return;
+    }
+
     const portNum = parseInt(newPort.portNumber);
-    if (isNaN(portNum) || !newPort.label) return;
+    if (isNaN(portNum)) {
+      setFormError("Port Number must be a valid number");
+      return;
+    }
+
+    if (!newPort.label.trim()) {
+      setFormError("Label is required");
+      return;
+    }
 
     try {
       await addPort(selectedServerId, {
         portNumber: portNum,
         protocol: newPort.protocol,
-        label: newPort.label,
+        label: newPort.label.trim(),
       });
       setDialogOpen(false);
       setNewPort({ portNumber: "", protocol: "TCP", label: "" });
+      alert("Port successfully added!");
     } catch (err) {
       console.error(err);
+      setFormError("Failed to add port. Please try again.");
     }
   };
 
@@ -120,10 +138,14 @@ export default function PortsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-fade-in">
         <div className="flex flex-col gap-1.5">
-          <h1 className="text-2xl font-bold text-foreground">Port Monitoring Center</h1>
+          <h1 className="text-2xl font-bold text-foreground">
+            Port Monitoring Center
+          </h1>
           {servers.length > 0 && (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Select Active Server:</span>
+              <span className="text-xs text-muted-foreground">
+                Select Active Server:
+              </span>
               <select
                 value={selectedServerId || ""}
                 onChange={(e) => setSelectedServer(e.target.value)}
@@ -148,7 +170,10 @@ export default function PortsPage() {
               className="w-56 pl-9"
             />
           </div>
-          <Button onClick={() => setDialogOpen(true)} disabled={!selectedServerId}>
+          <Button
+            onClick={() => setDialogOpen(true)}
+            disabled={!selectedServerId}
+          >
             <Plus className="h-4 w-4" />
             Add Port
           </Button>
@@ -182,7 +207,9 @@ export default function PortsPage() {
         style={{ animationDelay: "100ms" }}
       >
         {filteredPorts.map((port) => {
-          const cfg = statusConfig[port.status as keyof typeof statusConfig] || {
+          const cfg = statusConfig[
+            port.status as keyof typeof statusConfig
+          ] || {
             variant: "outline" as const,
             label: port.status || "Offline",
           };
@@ -219,7 +246,10 @@ export default function PortsPage() {
                     <p className="text-xs text-muted-foreground">
                       Response:{" "}
                       <span className="font-mono text-foreground">
-                        {port.responseTime !== undefined && port.responseTime > 0 ? `${port.responseTime}ms` : "—"}
+                        {port.responseTime !== undefined &&
+                        port.responseTime > 0
+                          ? `${port.responseTime}ms`
+                          : "—"}
                       </span>
                     </p>
                     <p className="text-xs text-muted-foreground">
@@ -234,7 +264,12 @@ export default function PortsPage() {
                       onClick={() => handleScanPort(port.id)}
                       disabled={isScanning}
                     >
-                      <RefreshCw className={cn("h-3.5 w-3.5", isScanning && "animate-spin")} />
+                      <RefreshCw
+                        className={cn(
+                          "h-3.5 w-3.5",
+                          isScanning && "animate-spin",
+                        )}
+                      />
                     </Button>
                     <Button
                       variant="ghost"
@@ -256,12 +291,20 @@ export default function PortsPage() {
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
           <Search className="mb-3 h-10 w-10 opacity-40" />
           <p className="text-lg font-medium">No ports found</p>
-          <p className="text-sm">Try adjusting your search or check that your agent is running.</p>
+          <p className="text-sm">
+            Try adjusting your search or check that your agent is running.
+          </p>
         </div>
       )}
 
       {/* Add Port Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => {
+        setDialogOpen(open);
+        if (!open) {
+          setFormError("");
+          setNewPort({ portNumber: "", protocol: "TCP", label: "" });
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add New Port</DialogTitle>
@@ -271,6 +314,11 @@ export default function PortsPage() {
           </DialogHeader>
 
           <div className="space-y-4 py-2">
+            {formError && (
+              <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+                {formError}
+              </div>
+            )}
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">
                 Port Number
@@ -310,9 +358,9 @@ export default function PortsPage() {
                       ? "border-accent bg-accent/10 text-accent"
                       : "border-border bg-transparent text-muted-foreground hover:text-foreground",
                   )}
-                  onClick={() => setNewPort({ ...newPort, protocol: "UDP" })}
+                  onClick={() => alert("Not Available for now")}
                 >
-                  UDP
+                  UDP (Not Available)
                 </button>
               </div>
             </div>
