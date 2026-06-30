@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import { useMonitorStore } from "@/stores/monitorStore";
 import { logsAPI, aiAPI, portsAPI } from "@/lib/api";
+import { onNewPortLog } from "@/lib/socket";
 import type { PortLog } from "@/types";
 import {
   AreaChart,
@@ -73,12 +74,12 @@ export default function DashboardPage() {
 
         // B. Fetch ports directly from API to run synchronous logic
         const portsResponse = await portsAPI.getAll(selectedServerId);
-        const activePorts = portsResponse.data.data;
+        const activePorts = portsResponse.data.data || [];
 
         if (activePorts.length > 0) {
           // C. Fetch logs for all ports of the server in parallel
           const logsPromises = activePorts.map((port: any) =>
-            logsAPI.getAll(port.id, { limit: 5 }),
+            logsAPI.getAll(port.id, { limit: 10 }),
           );
           const logsResponses = await Promise.all(logsPromises);
           const allLogs: PortLog[] = logsResponses.flatMap(
@@ -93,19 +94,32 @@ export default function DashboardPage() {
 
           setRecentLogs(allLogs.slice(0, 10));
 
-          // E. Map chronological chart data for the last 8 checks
-          const chartLogs = allLogs.slice(0, 8).reverse();
-          const mappedChartData = chartLogs.map((logItem) => {
-            const timeStr = new Date(logItem.checkedAt).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            });
-            return {
-              time: timeStr,
-              [`Port ${logItem.portNumber}`]: logItem.responseTime || 0,
-            };
+          // E. Group logs by checkedAt seconds timestamp to align parallel port scan intervals
+          const groups: { [key: string]: any } = {};
+          allLogs.forEach((logItem) => {
+            const timeKey = new Date(logItem.checkedAt)
+              .toISOString()
+              .slice(0, 19);
+            if (!groups[timeKey]) {
+              groups[timeKey] = {
+                time: new Date(logItem.checkedAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                }),
+              };
+            }
+            groups[timeKey][`Port ${logItem.portNumber}`] =
+              logItem.responseTime || 0;
           });
-          setChartData(mappedChartData);
+
+          // Sort chronological and take the last 8 entries
+          const sortedChartData = Object.keys(groups)
+            .sort()
+            .map((key) => groups[key])
+            .slice(-8);
+
+          setChartData(sortedChartData);
         } else {
           setRecentLogs([]);
           setChartData([]);
@@ -117,6 +131,55 @@ export default function DashboardPage() {
 
     loadDashboardData();
   }, [selectedServerId, fetchPorts]);
+
+  // Listen to live socket new-log events to update recentLogs and chartData dynamically
+  useEffect(() => {
+    if (!selectedServerId) return;
+
+    const unsub = onNewPortLog((payload) => {
+      // Check if the log belongs to a port of our currently selected server
+      const targetPort = ports.find((p) => p.id === payload.portId);
+      if (!targetPort) return;
+
+      // A. Prepend log to recentLogs, keeping max 10
+      setRecentLogs((prev) => {
+        // Prevent duplicate logs from being added
+        if (prev.some((l) => l.id === payload.log.id)) return prev;
+        const newRecent = [payload.log, ...prev];
+        return newRecent.slice(0, 10);
+      });
+
+      // B. Update chartData in real-time
+      setChartData((prev) => {
+        const timeStr = new Date(payload.log.checkedAt).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+
+        // Check if there is already a node for this timeKey
+        const existingNodeIdx = prev.findIndex((node) => node.time === timeStr);
+
+        if (existingNodeIdx > -1) {
+          const updated = [...prev];
+          updated[existingNodeIdx] = {
+            ...updated[existingNodeIdx],
+            [`Port ${payload.log.portNumber}`]: payload.log.responseTime || 0,
+          };
+          return updated;
+        } else {
+          const newNode = {
+            time: timeStr,
+            [`Port ${payload.log.portNumber}`]: payload.log.responseTime || 0,
+          };
+          const newChartData = [...prev, newNode];
+          return newChartData.slice(-8); // Keep last 8 entries
+        }
+      });
+    });
+
+    return () => unsub();
+  }, [selectedServerId, ports]);
 
   // 4. Fetch total count of AI solutions
   useEffect(() => {
