@@ -43,3 +43,26 @@ export function probePort(host, port, timeoutMs = 2000) {
     });
   });
 }
+
+/**
+ * Probes a local port using both IPv4 (127.0.0.1) and IPv6 (::1) loopback.
+ * Many dev servers (Vite, Next.js) bind to IPv6 `::1` by default on Linux,
+ * while others bind to IPv4 `127.0.0.1`. This function checks both and
+ * returns "open" if either succeeds.
+ *
+ * @param {number} port - The port number to check
+ * @param {number} [timeoutMs=2000] - Connection timeout in milliseconds
+ * @returns {Promise<{ port: number, status: "open" | "closed" | "filtered", responseTime: number }>}
+ */
+export async function probeLocalPort(port, timeoutMs = 2000) {
+  // Try IPv4 first (most common)
+  const ipv4Result = await probePort("127.0.0.1", port, timeoutMs);
+  if (ipv4Result.status === "open") return ipv4Result;
+
+  // Fallback to IPv6 loopback
+  const ipv6Result = await probePort("::1", port, timeoutMs);
+  if (ipv6Result.status === "open") return ipv6Result;
+
+  // Neither worked — return the IPv4 result (closed/filtered)
+  return ipv4Result;
+}

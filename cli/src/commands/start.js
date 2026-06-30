@@ -3,7 +3,7 @@ import axios from "axios";
 import os from "os";
 import { io } from "socket.io-client";
 import { readConfig, writeConfig } from "../services/config.js";
-import { probePort } from "../utils/ping.js";
+import { probeLocalPort } from "../utils/ping.js";
 
 const BACKEND_URL =
   process.env.ORIONPULSE_API_URL || "http://localhost:8080/api";
@@ -109,7 +109,7 @@ export async function startCommand() {
       `Received on-demand scan request: Port ${portNumber} (${protocol})`,
     );
 
-    const result = await probePort("127.0.0.1", portNumber, 2000);
+    const result = await probeLocalPort(portNumber, 2000);
 
     // 1. Post single scan log to backend
     try {
@@ -170,7 +170,7 @@ export async function startCommand() {
       // B. Scan all ports in parallel
       const scanResults = await Promise.all(
         portsToScan.map(async (p) => {
-          const check = await probePort("127.0.0.1", p.portNumber, 1500);
+          const check = await probeLocalPort(p.portNumber, 1500);
           return {
             portNumber: p.portNumber,
             protocol: p.protocol,
