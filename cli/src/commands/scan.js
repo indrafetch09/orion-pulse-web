@@ -1,5 +1,5 @@
 import { intro, outro, spinner, log } from "@clack/prompts";
-import { probePort } from "../utils/ping.js";
+import { probeLocalPort } from "../utils/ping.js";
 
 const DEFAULT_PORTS = [22, 80, 443, 3000, 3306, 5173, 5432, 8080, 27017, 8081];
 
@@ -18,7 +18,7 @@ export async function scanCommand(host = "127.0.0.1") {
   const results = [];
   // Execute all probes in parallel
   const probes = DEFAULT_PORTS.map(async (port) => {
-    const res = await probePort(host, port, 1500);
+    const res = await probeLocalPort(port, 1500);
     results.push(res);
   });
 

@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { AISolution, IAISolution } from "../models/AISolution";
 // Helper to generate a cache key based on port number and simplified error message
 function generateErrorKey(
@@ -92,17 +92,7 @@ export async function analyzePortFailure(
     });
   }
 
-  try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    // Use gemini-1.5-flash for fast and cost-effective analysis
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      generationConfig: {
-        responseMimeType: "application/json",
-      },
-    });
-
-    const prompt = `
+  const prompt = `
 You are OrionPulse AI, an expert Network Operations and Linux Systems Administrator.
 Analyze a port monitoring failure event and generate troubleshooting instructions.
 
@@ -113,15 +103,31 @@ Connection Error Message: "${errorMessage || "Connection refused / Timed out"}"
 Analyze why the service on port ${portNumber} might be offline or returning this status.
 Respond ONLY with a JSON object in this format:
 {
-  "analysis": "A detailed explanation of why the service on port ${portNumber} might be down, taking the error message into account. Keep it concise but professional.",
-  "solution": "Step-by-step troubleshooting commands or configuration checks. Each step should be on a new line and start with a number. Use specific commands for common ports (e.g. systemctl, ufw, netstat).",
-  "confidence": 95
+"analysis": "A detailed explanation of why the service on port ${portNumber} might be down, taking the error message into account. Keep it concise but professional.",
+"solution": "Step-by-step troubleshooting commands or configuration checks. Each step should be on a new line and start with a number. Use specific commands for common ports (e.g. systemctl, ufw, netstat).",
+"confidence": 95
 }
 `;
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-    const parsed = JSON.parse(text);
+  try {
+    const genAI = new GoogleGenAI({ apiKey });
+    const model = await genAI.interactions.create({
+      model: "gemini-2.5-flash-lite",
+      input: `${prompt}`,
+      response_format: { type: "text", mime_type: "application/json" },
+    });
+
+    const result = model.output_text;
+    if (!result) {
+      throw new Error("Failed to generate text");
+    }
+
+    const cleanResult = result
+      .replace(/```json/, "")
+      .replace(/```/g, "")
+      .trim();
+
+    const parsed = JSON.parse(cleanResult);
 
     return await AISolution.create({
       portLogId,

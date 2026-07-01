@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getSocket } from "@/lib/socket";
 import { useMonitorStore } from "@/stores/monitorStore";
+import { useAuthStore } from "@/stores/authStore";
 import { onHeartbeat, onPortStatusChange, onAlert } from "@/lib/socket";
 
 export interface AlertNotification {
@@ -14,10 +15,14 @@ export function useSocket() {
   const [isConnected, setIsConnected] = useState(false);
   const [alerts, setAlerts] = useState<AlertNotification[]>([]);
   const { updateServerStatus, updatePortStatus } = useMonitorStore();
+  const token = useAuthStore((s) => s.token);
 
   useEffect(() => {
     const socket = getSocket();
-    if (!socket) return;
+    if (!socket) {
+      setIsConnected(false);
+      return;
+    }
 
     const handleConnect = () => setIsConnected(true);
     const handleDisconnect = () => setIsConnected(false);
@@ -52,7 +57,7 @@ export function useSocket() {
       unsubPortStatus();
       unsubAlert();
     };
-  }, [updateServerStatus, updatePortStatus]);
+  }, [updateServerStatus, updatePortStatus, token]);
 
   const clearAlerts = () => setAlerts([]);
 

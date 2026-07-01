@@ -62,7 +62,7 @@ function DropdownMenuContent({
   return (
     <div
       className={cn(
-        "absolute z-50 mt-2 min-w-[180px] glass-strong rounded-lg p-1 shadow-xl animate-fade-in",
+        "absolute z-[100] mt-2 min-w-[180px] glass-strong rounded-lg p-1 shadow-xl animate-fade-in",
         align === "end" ? "right-0" : "left-0",
         className,
       )}

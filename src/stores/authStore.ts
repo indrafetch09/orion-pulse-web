@@ -96,3 +96,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   clearError: () => set({ error: null }),
 }));
+
+// Initialize socket immediately on boot if token exists
+const bootToken = localStorage.getItem("orionpulse_token");
+if (bootToken) {
+  try {
+    connectSocket(bootToken);
+  } catch (err) {
+    console.error("Failed to auto-connect socket on boot:", err);
+  }
+}
