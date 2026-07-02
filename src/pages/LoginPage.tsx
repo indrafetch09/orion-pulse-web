@@ -4,13 +4,7 @@ import { Activity, Loader2, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore } from "@/stores/authStore";
 import { authAPI } from "@/lib/api";
 
@@ -40,10 +34,11 @@ export default function LoginPage() {
     try {
       if (isRegister) {
         await register(email, username, password);
+        navigate("/login", { replace: true });
       } else {
         await login(email, password);
       }
-      navigate("/", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch {
       // Error is set in the store
     }
@@ -55,7 +50,7 @@ export default function LoginPage() {
     try {
       await authAPI.authorizeDevice(deviceCode);
       // Show success briefly then redirect
-      setTimeout(() => navigate("/", { replace: true }), 1500);
+      setTimeout(() => navigate("/dashboard", { replace: true }), 1500);
     } catch {
       // Error handling
       setDeviceAuthorizing(false);
@@ -73,11 +68,8 @@ export default function LoginPage() {
             </div>
             <div className="text-left">
               <CardTitle className="text-2xl font-bold tracking-tight">
-                OrionPulse
+                Orionpulse
               </CardTitle>
-              <CardDescription className="text-xs">
-                Local Network Monitoring System
-              </CardDescription>
             </div>
           </div>
         </CardHeader>

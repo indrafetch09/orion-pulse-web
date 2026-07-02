@@ -1,5 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import { useAuthStore } from "@/stores/authStore";
+import { useEffect } from "react";
+import { Features } from "@/pages/landing/Features";
+import Docs from "@/pages/landing/Docs";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import DashboardPage from "@/pages/DashboardPage";
 import LoginPage from "@/pages/LoginPage";
@@ -8,11 +11,9 @@ import LogsPage from "@/pages/LogsPage";
 import AIInsightsPage from "@/pages/AIInsightsPage";
 import SettingsPage from "@/pages/SettingsPage";
 
-import { useEffect } from "react";
-
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAuthenticated) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -26,10 +27,12 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<Features />} />
+        <Route path="/docs" element={<Docs />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/cli-login" element={<LoginPage />} />
         <Route
-          path="/"
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <DashboardLayout />
