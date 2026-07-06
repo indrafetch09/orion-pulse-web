@@ -12,7 +12,7 @@ const SOCKET_URL = process.env.ORIONPULSE_SOCKET_URL || "http://localhost:8080";
 const DEFAULT_PORTS = [22, 80, 443, 3000, 5173, 8080];
 
 export async function startCommand() {
-  intro("OrionPulse - Telemetry Daemon");
+  intro("Orionpulse - Telemetry Daemon");
 
   const config = readConfig();
   if (!config.token) {
@@ -191,11 +191,11 @@ export async function startCommand() {
       // Simple stdout status indicator
       const activeCount = scanResults.filter((r) => r.status === "open").length;
       process.stdout.write(
-        `\r[OrionPulse Telemetry] Scanned ${scanResults.length} ports (Open: ${activeCount}) at ${new Date().toLocaleTimeString()}`,
+        `\r[Orionpulse Telemetry] Scanned ${scanResults.length} ports (Open: ${activeCount}) at ${new Date().toLocaleTimeString()}`,
       );
     } catch (err) {
       process.stdout.write(
-        `\r[OrionPulse Telemetry] Scanning failed: ${err.message}`,
+        `\r[Orionpulse Telemetry] Scanning failed: ${err.message}`,
       );
     }
   }, 10000);
@@ -206,7 +206,7 @@ export async function startCommand() {
     clearInterval(telemetryInterval);
     socket.disconnect();
     console.log("\n");
-    outro("OrionPulse Telemetry Daemon stopped.");
+    outro("Orionpulse Telemetry Daemon stopped.");
     process.exit(0);
   };
 

@@ -9,7 +9,7 @@ const DEFAULT_PORTS = [22, 80, 443, 3000, 3306, 5173, 5432, 8080, 27017, 8081];
  * @param {string} [host="127.0.0.1"] - Host to target scan
  */
 export async function scanCommand(host = "127.0.0.1") {
-  intro("OrionPulse - Local Socket Scanner");
+  intro("Orionpulse - Local Socket Scanner");
   log.info(`Target Host: ${host}`);
 
   const s = spinner();

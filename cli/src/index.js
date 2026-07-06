@@ -15,21 +15,21 @@ const program = new Command();
 program
   .name("orionpulse")
   .description(
-    "Welcome to OrionPulse, Your Local Agent Port Monitoring System.",
+    "Welcome to Orionpulse, Your Local Agent Port Monitoring System.",
   )
   .version("1.0.1");
 
 // Login command: supports both dynamic token input and OAuth device code flow
 program
   .command("login")
-  .description("Connect this terminal to your OrionPulse account")
+  .description("Connect this terminal to your Orionpulse account")
   .argument(
     "[token]",
     "API Access Token (optional; triggers browser login if omitted)",
   )
   .action(async (token) => {
     if (token) {
-      intro("OrionPulse - Direct Token Authorization");
+      intro("Orionpulse - Direct Token Authorization");
       const s = spinner();
       s.start("Verifying token with server...");
 
@@ -57,9 +57,9 @@ program
 // Logout command
 program
   .command("logout")
-  .description("Log out from your OrionPulse account and clear local config")
+  .description("Log out from your Orionpulse account and clear local config")
   .action(() => {
-    intro("OrionPulse - Logout");
+    intro("Orionpulse - Logout");
     clearConfig();
     outro("Successfully logged out. Local configuration cleared.");
     process.exit(0);
@@ -70,7 +70,7 @@ program
   .command("status")
   .description("Check current login status and configuration details")
   .action(async () => {
-    intro("OrionPulse - Connection Status");
+    intro("Orionpulse - Connection Status");
     const config = readConfig();
     if (!config.token) {
       cancel("Status: Not Logged In. Please run 'orionpulse login' first.");
@@ -91,7 +91,7 @@ program
         `User: ${user.username} (${user.email})\nAssociated Server ID: ${config.serverId || "Not linked (Run start daemon)"}`,
         "Status: Connected",
       );
-      outro("OrionPulse LNMS is active and ready.");
+      outro("Orionpulse LNMS is active and ready.");
     } catch {
       s.stop("Failed");
       cancel(

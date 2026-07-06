@@ -9,7 +9,7 @@ const FRONTEND_URL = process.env.ORIONPULSE_WEB_URL || "http://localhost:5173";
 
 export async function loginCommand() {
   intro(
-    "Welcome to OrionPulse, Your Local Agent Port Manager - Terminal Authorization",
+    "Welcome to Orionpulse, Your Local Agent Port Manager - Terminal Authorization",
   );
 
   const s = spinner();
