@@ -86,7 +86,7 @@ export default function LoginPage() {
                   Authorize Terminal Access
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  A terminal is requesting access to your OrionPulse account.
+                  A terminal is requesting access to your Orionpulse account.
                 </p>
               </div>
               <div className="w-full rounded-lg border border-border bg-muted/50 px-4 py-3">

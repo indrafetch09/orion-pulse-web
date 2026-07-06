@@ -1,7 +1,7 @@
 {
   "name": "orionpulse-cli",
   "version": "1.0.1",
-  "description": "CLI Agent for OrionPulse LNMS",
+  "description": "CLI Agent for Orionpulse LNMS",
   "keywords": [
     "orion",
     "orionpulse",

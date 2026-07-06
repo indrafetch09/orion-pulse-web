@@ -93,7 +93,7 @@ export async function analyzePortFailure(
   }
 
   const prompt = `
-You are OrionPulse AI, an expert Network Operations and Linux Systems Administrator.
+You are Orionpulse AI, an expert Network Operations and Linux Systems Administrator.
 Analyze a port monitoring failure event and generate troubleshooting instructions.
 
 Port Checked: ${portNumber}

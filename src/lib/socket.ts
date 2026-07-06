@@ -23,17 +23,17 @@ export function connectSocket(token: string): Socket {
   });
 
   socket.on("connect", () => {
-    console.log("[OrionPulse] Socket connected");
+    console.log("[Orionpulse] Socket connected");
     // Join the dashboards room to receive real-time port/log/server broadcasts
     socket?.emit("join-dashboard");
   });
 
   socket.on("disconnect", (reason) => {
-    console.log("[OrionPulse] Socket disconnected:", reason);
+    console.log("[Orionpulse] Socket disconnected:", reason);
   });
 
   socket.on("connect_error", (error) => {
-    console.error("[OrionPulse] Socket connection error:", error.message);
+    console.error("[Orionpulse] Socket connection error:", error.message);
   });
 
   return socket;

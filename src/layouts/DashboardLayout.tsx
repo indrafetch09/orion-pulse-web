@@ -63,7 +63,7 @@ function SidebarContent({
         {!collapsed && (
           <div className="flex items-center gap-2 overflow-hidden">
             <span className="text-lg font-bold tracking-tight text-foreground whitespace-nowrap">
-              OrionPulse
+              Orionpulse
             </span>
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" />

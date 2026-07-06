@@ -126,7 +126,7 @@ export function Features() {
 
         {/* Footer */}
         <footer className="py-8 text-center text-muted-foreground text-sm border-t border-border">
-          <p>© 2026 OrionPulse. Built for the modern web.</p>
+          <p>© 2026 Orionpulse. Built for the modern web.</p>
         </footer>
       </div>
     </>

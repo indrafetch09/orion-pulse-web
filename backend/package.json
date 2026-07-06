@@ -1,7 +1,7 @@
 {
   "name": "orion-pulse-backend",
   "version": "1.0.0",
-  "description": "Express.js + Bun + TypeScript backend for OrionPulse LNMS",
+  "description": "Express.js + Bun + TypeScript backend for Orionpulse LNMS",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {

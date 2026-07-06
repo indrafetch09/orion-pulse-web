@@ -57,7 +57,7 @@ mongoose
     // Start HTTP Server
     httpServer.listen(PORT, () => {
       console.log(`===================================================`);
-      console.log(`OrionPulse Backend Server is running on port ${PORT}`);
+      console.log(`Orionpulse Backend Server is running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
       console.log(`Health Check: http://localhost:${PORT}/health`);
       console.log(`===================================================`);
