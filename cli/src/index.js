@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 import { Command } from "commander";
 import { loginCommand } from "./commands/login.js";
 import { scanCommand } from "./commands/scan.js";
@@ -17,7 +17,7 @@ program
   .description(
     "Welcome to OrionPulse, Your Local Agent Port Monitoring System.",
   )
-  .version("1.0.0");
+  .version("1.0.1");
 
 // Login command: supports both dynamic token input and OAuth device code flow
 program

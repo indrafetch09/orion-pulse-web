@@ -1,11 +1,35 @@
 {
   "name": "orionpulse-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI Agent for OrionPulse LNMS",
-  "main": "src/index.js",
+  "keywords": [
+    "orion",
+    "orionpulse",
+    "ai",
+    "AI",
+    "local",
+    "network",
+    "network",
+    "management",
+    "manager",
+    "port",
+    "dev",
+    "developer"
+  ],
+  "homepage": "https://github.com/indrafetch09/orion-pulse-web#readme",
+  "bugs": {
+    "url": "https://github.com/indrafetch09/orion-pulse-web/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/indrafetch09/orion-pulse-web.git"
+  },
+  "license": "ISC",
+  "author": "indrafetch09",
   "type": "module",
+  "main": "src/index.js",
   "bin": {
-    "orionpulse": "./src/index.js"
+    "orionpulse": "src/index.js"
   },
   "scripts": {
     "start": "node src/index.js"
@@ -15,6 +39,7 @@
     "axios": "^1.7.2",
     "commander": "^12.1.0",
     "open": "^10.1.0",
+    "orionpulse-cli": "^1.0.1",
     "socket.io-client": "^4.7.5"
   }
 }
