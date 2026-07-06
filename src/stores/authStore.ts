@@ -36,8 +36,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       localStorage.setItem("orionpulse_token", token);
       connectSocket(token);
       set({ user, token, isAuthenticated: true, isLoading: false });
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Login failed";
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        (error instanceof Error ? error.message : "Login failed");
       set({ error: message, isLoading: false });
       throw error;
     }
@@ -51,9 +53,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       localStorage.setItem("orionpulse_token", token);
       connectSocket(token);
       set({ user, token, isAuthenticated: true, isLoading: false });
-    } catch (error: unknown) {
+    } catch (error: any) {
       const message =
-        error instanceof Error ? error.message : "Registration failed";
+        error?.response?.data?.message ||
+        (error instanceof Error ? error.message : "Registration failed");
       set({ error: message, isLoading: false });
       throw error;
     }

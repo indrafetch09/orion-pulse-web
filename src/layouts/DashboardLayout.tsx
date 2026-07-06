@@ -30,17 +30,17 @@ import { useSocket } from "@/hooks/useSocket";
 import { useAuthStore } from "@/stores/authStore";
 
 const navItems = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/" },
-  { label: "Ports", icon: Network, path: "/ports" },
-  { label: "Logs", icon: ScrollText, path: "/logs" },
-  { label: "AI Insights", icon: Brain, path: "/ai-insights" },
-  { label: "Settings", icon: Settings, path: "/settings" },
+  { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+  { label: "Ports", icon: Network, path: "/dashboard/ports" },
+  { label: "Logs", icon: ScrollText, path: "/dashboard/logs" },
+  { label: "AI Insights", icon: Brain, path: "/dashboard/ai-insights" },
+  { label: "Settings", icon: Settings, path: "/dashboard/settings" },
 ];
 
 function getPageTitle(pathname: string): string {
   if (pathname === "/") return "Dashboard";
   const item = navItems.find((n) => n.path === pathname);
-  return item?.label ?? "OrionPulse";
+  return item?.label ?? "Orionpulse";
 }
 
 function SidebarContent({
@@ -79,8 +79,9 @@ function SidebarContent({
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navItems.map((item) => {
           const isActive =
-            item.path === "/"
-              ? location.pathname === "/"
+            item.path === "/dashboard"
+              ? location.pathname === "/dashboard" ||
+                location.pathname === "/dashboard/"
               : location.pathname.startsWith(item.path);
           return (
             <Link
@@ -90,7 +91,7 @@ function SidebarContent({
               className={cn(
                 "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
                 isActive
-                  ? "border-l-2 border-primary bg-muted text-foreground shadow-sm"
+                  ? "border-l-2  bg-muted text-foreground "
                   : "border-l-2 border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground",
               )}
             >
