@@ -1,5 +1,5 @@
 {
-  "name": "orion-pulse-backend",
+  "name": "orion-pulse-api",
   "version": "1.0.0",
   "description": "Express.js + Bun + TypeScript backend for Orionpulse LNMS",
   "main": "src/index.ts",
