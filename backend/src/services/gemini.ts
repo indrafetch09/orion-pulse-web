@@ -112,7 +112,7 @@ Respond ONLY with a JSON object in this format:
   try {
     const genAI = new GoogleGenAI({ apiKey });
     const model = await genAI.interactions.create({
-      model: "gemini-2.5-flash-lite",
+      model: "gemini-3.1-flash-lite",
       input: `${prompt}`,
       response_format: { type: "text", mime_type: "application/json" },
     });
