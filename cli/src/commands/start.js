@@ -5,9 +5,11 @@ import { io } from "socket.io-client";
 import { readConfig, writeConfig } from "../services/config.js";
 import { probeLocalPort } from "../utils/ping.js";
 
+// ponytail: npm users need prod defaults, devs override with env vars
 const BACKEND_URL =
-  process.env.ORIONPULSE_API_URL || "http://localhost:8080/api";
-const SOCKET_URL = process.env.ORIONPULSE_SOCKET_URL || "http://localhost:8080";
+  process.env.ORIONPULSE_API_URL || "https://api.orionpulse.my.id/api";
+const SOCKET_URL =
+  process.env.ORIONPULSE_SOCKET_URL || "https://api.orionpulse.my.id";
 
 const DEFAULT_PORTS = [22, 80, 443, 3000, 5173, 8080];
 
