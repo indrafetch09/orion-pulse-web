@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "NODE_ENV=production tsc -b && vite build && cd backend/ && bun run build",
     "lint": "eslint .",
     "test": "bun test",
     "preview": "vite preview --port 4000 --host 0.0.0.0"
