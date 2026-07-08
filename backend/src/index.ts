@@ -1,4 +1,5 @@
 import express from "express";
+import path from "path";
 import { createServer } from "http";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -40,6 +41,13 @@ app.use("/api/auth", authRoutes);
 app.use("/api/servers", serverRoutes);
 app.use("/api/ports", portRoutes);
 app.use("/api/ai", aiRoutes);
+
+// ponytail: serve frontend from same origin, no separate server needed
+const frontendPath = path.join(__dirname, "../../dist");
+app.use(express.static(frontendPath));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
+});
 
 // Database Connection and Server Initialization
 const MONGODB_URI = process.env.MONGODB_URI;
