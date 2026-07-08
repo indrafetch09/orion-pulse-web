@@ -1,7 +1,8 @@
 import { io, type Socket } from "socket.io-client";
 import type { HeartbeatPayload, PortScanResult } from "@/types";
 
-const SOCKET_URL = import.meta.env.VITE_WS_URL || "http://localhost:8080";
+// ponytail: same-origin in prod, env var only for local dev
+const SOCKET_URL = import.meta.env.VITE_WS_URL || "";
 
 let socket: Socket | null = null;
 
@@ -80,7 +81,8 @@ export function onPortStatusChange(
   };
 
   const logListener = (payload: { portId: string; log: any }) => {
-    const portId = payload.portId || payload.log?.portId || payload.log?.portId?._id;
+    const portId =
+      payload.portId || payload.log?.portId || payload.log?.portId?._id;
     if (!portId) return;
     callback({
       portId,
