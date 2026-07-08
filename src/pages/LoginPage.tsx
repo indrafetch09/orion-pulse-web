@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { Activity, Loader2, Shield } from "lucide-react";
+import { Activity, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -199,20 +199,13 @@ export default function LoginPage() {
                       isRegister ? "new-password" : "current-password"
                     }
                   />
-                  <div className=""></div>
                 </div>
               </div>
 
               {error && <p className="text-sm text-destructive">{error}</p>}
 
               <Button type="submit" className="w-full" isLoading={isLoading}>
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : isRegister ? (
-                  "Create Account"
-                ) : (
-                  "Sign In"
-                )}
+                {isRegister ? "Create Acount" : "Sign In"}
               </Button>
             </form>
           )}
