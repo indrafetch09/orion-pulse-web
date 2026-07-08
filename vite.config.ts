@@ -18,4 +18,9 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    host: true,
+    port: 4000,
+    allowedHosts: ["orionpulse.my.id"],
+  },
 });
