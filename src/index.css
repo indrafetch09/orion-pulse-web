@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* ponytail: load nerd font on mobile via cdn, fall back to google fonts standard jetbrains mono */
+@font-face {
+    font-family: "JetBrainsMono Nerd Font";
+    src: url("https://cdn.jsdelivr.net/gh/mshaugh/nerdfont-webfonts@v3.3.0/build/jetbrains-mono-nerd-font.woff2")
+        format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
 @theme {
     --color-background: #090f1a;
     --color-foreground: #f8fafc;
@@ -40,7 +50,8 @@
     --radius-xl: 1.25rem;
 
     --font-sans:
-        "JetBrainsMono Nerd Font", ui-sans-serif, system-ui, sans-serif;
+        "JetBrainsMono Nerd Font", "JetBrains Mono", ui-sans-serif, system-ui,
+        sans-serif;
 }
 
 @layer base {

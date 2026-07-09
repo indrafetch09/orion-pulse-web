@@ -115,5 +115,37 @@ orionpulse start
 
 ---
 
+## Assets & Custom Branding
+
+### 1. Logo Customization & Sizing Guide
+The recommended format is **inline SVG** because it supports dynamic theming:
+- Edit the SVG path directly in your React code.
+- Use Tailwind utility classes like `text-primary` or SVG attributes like `stroke="currentColor"` so the logo dynamically inherits dark/light theme styles.
+
+**Sizing Specifications:**
+
+| Context | Tailwind Class | Dimensions (px) | Usage Location |
+|---|---|---|---|
+| **Favicon** | N/A | scales natively | `/public/favicon.svg` |
+| **Sidebar** | `h-6 w-6` | 24x24px | Sidebar navigation toggles |
+| **Header / Navbar** | `h-8 w-8` or `h-9 w-9` | 32x32px / 36x36px | Global headers and navigation bars |
+| **Auth / Login Card** | `h-12 w-12` | 48x48px | Auth components (`LoginPage.tsx`) |
+| **Hero / Landing Page** | `h-16 w-16` to `h-24 w-24` | 64x64px to 96x96px | Hero sections and product highlights |
+
+### 2. Favicon Configuration
+The app uses a modern SVG favicon that automatically scales to all screen resolutions (16x16, 32x32, 180x180, etc.):
+- Save your custom icon as `public/favicon.svg`.
+- The reference is pre-configured in `index.html`:
+  ```html
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  ```
+
+### 3. Icon Library Usage
+To keep bundle sizes small and page performance high, avoid installing external font-packs (e.g. FontAwesome). Instead, use the built-in libraries:
+- **UI & System Icons**: Use standard [Lucide React](https://lucide.dev/icons) components (e.g. `Brain`, `Activity`, `Shield`).
+- **Brand & Third-party Icons**: Use [React Icons](https://react-icons.github.io/react-icons/) (e.g. `FaGithub` from `react-icons/fa`, `SiGooglegemini` from `react-icons/si`).
+
+---
+
 ## License
 ISC
