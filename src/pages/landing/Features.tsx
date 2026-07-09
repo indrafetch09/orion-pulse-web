@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "react-router";
 import {
   ArrowRight,
@@ -21,6 +22,10 @@ import { useAuthStore } from "@/stores/authStore";
 
 export function Features() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  useEffect(() => {
+    document.title = "Orionpulse - AI-Powered Local Network Monitoring System";
+  }, []);
 
   return (
     <>
