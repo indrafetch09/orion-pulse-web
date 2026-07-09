@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /cli-login
+
+Sitemap: https://orionpulse.my.id/sitemap.xml

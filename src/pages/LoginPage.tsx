@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { Activity, Shield } from "lucide-react";
+import { Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore } from "@/stores/authStore";
 import { authAPI } from "@/lib/api";
+import orionLogo from "@/assets/orionpulse_fill.svg";
 
 export default function LoginPage() {
   const [isRegister, setIsRegister] = useState(false);
@@ -21,6 +22,12 @@ export default function LoginPage() {
 
   const { login, register, isLoading, error, clearError, isAuthenticated } =
     useAuthStore();
+
+  useEffect(() => {
+    document.title = isRegister
+      ? "Register | Orionpulse"
+      : "Sign In | Orionpulse";
+  }, [isRegister]);
 
   useEffect(() => {
     if (isAuthenticated && !deviceCode) {
@@ -61,11 +68,12 @@ export default function LoginPage() {
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
       <Card className="relative z-10 w-full max-w-md glass-strong animate-fade-in">
         <CardHeader className="items-center text-center">
-          {/* Branding */}
           <div className="mb-2 flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/20">
-              <Activity className="h-7 w-7 text-white" />
-            </div>
+            <img
+              src={orionLogo}
+              className="h-12 w-12 rounded-xl p-1.5"
+              alt="Orionpulse logo"
+            />
             <div className="text-left">
               <CardTitle className="text-2xl font-bold tracking-tight">
                 Orionpulse
