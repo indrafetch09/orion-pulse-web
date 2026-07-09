@@ -1,73 +1,119 @@
-# React + TypeScript + Vite
+# Orionpulse
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Orionpulse is a lightweight Local Network Monitoring System (LNMS) that checks the health of your local ports, streams status updates in real-time, and automatically diagnoses port/service failures using Gemini AI.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Architecture
 
-## React Compiler
+- **Frontend**: Single Page Application (SPA) built with React, Vite, and TailwindCSS.
+- **Backend**: Express.js server providing a REST API and a Socket.io WebSocket server. In production, the backend serves the built frontend directly.
+- **CLI Agent**: A lightweight background daemon that runs on target nodes, monitors configured ports, and broadcasts updates via WebSocket.
+- **Diagnostics**: AI-Powered remediation steps powered by the `gemini-3.1-flash-lite` LLM model.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## Quick Start (Local Development)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 1. Prerequisites
+- [Node.js](https://nodejs.org/) (v18+) or [Bun](https://bun.sh/)
+- [MongoDB](https://www.mongodb.com/) running locally or a MongoDB Atlas URI
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 2. Configure Environment variables
+Create a `.env` file in the `backend/` directory:
+```env
+PORT=8080
+MONGODB_URI=mongodb://localhost:27017/orionpulse
+JWT_SECRET=supersecretkeychangeinproduction12345
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 3. Run the Monorepo
+Install dependencies and start development servers:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Using npm: 
+```bash
+# Root directory (starts frontend)
+npm install
+npm run dev
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Backend directory
+cd backend
+npm install
+npm run dev
 ```
+
+---
+
+Using bun: 
+```bash
+# Root directory (starts frontend)
+bun install
+bun run dev
+
+# Backend directory
+cd backend
+bun install
+bun run dev
+```
+
+---
+## Production / EC2 Deployment
+
+Orionpulse is optimized to run on a single domain. The backend serves the production frontend build out-of-the-box.
+
+### 1. Build & Start with PM2
+On your production server (e.g. AWS EC2 instance):
+```bash
+# Install root & build frontend
+npm install
+npm run build
+
+# Install backend & start
+cd backend
+npm install
+bun run build
+pm2 start dist/index.js --name orionpulse --interpreter bun
+pm2 save
+```
+
+### 2. Reverse Proxy / Cloudflare Tunnel
+Configure your proxy or Cloudflare tunnel to forward traffic to `http://localhost:8080`.
+No separate API or websocket subdomain configurations are needed.
+
+---
+
+## CLI Telemetry Agent Setup
+
+Monitor any server by installing the global CLI daemon:
+
+```bash
+# 1. Install CLI globally
+npm install -g orionpulse-cli
+
+# 2. Login to your account
+orionpulse login [your_token] # Check into Orionpulse user settings
+
+# 3. Start monitoring daemon
+orionpulse start
+```
+
+---
+
+## API Endpoints Reference
+
+| Method | Route | Auth | Description |
+|---|---|---|---|
+| `POST` | `/api/auth/register` | Public | Register account |
+| `POST` | `/api/auth/login` | Public | Authenticate and obtain JWT token |
+| `GET` | `/api/servers` | Private | List all registered node servers |
+| `POST` | `/api/servers` | Private | Register a new server node |
+| `POST` | `/api/servers/:serverId/ports` | Private | Add a port to monitor |
+| `POST` | `/api/ports/agent/logs` | Public | Submit telemetry logs from CLI agent |
+| `POST` | `/api/ports/:id/scan` | Private | Force an immediate port scan |
+| `GET` | `/api/ai/solutions` | Private | Retrieve AI-generated diagnostics |
+
+---
+
+## License
+ISC
