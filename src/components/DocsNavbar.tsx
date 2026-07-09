@@ -31,7 +31,7 @@ export default function DocsNavbar() {
         </div>
 
         {/* Right Side: Search */}
-        <div className="flex items-center">
+        <div className="flex items-center gap-8">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -40,6 +40,14 @@ export default function DocsNavbar() {
               // onChange={(e) => setSearch(e.target.value)}
               className="font-normal w-56 pl-9"
             />
+          </div>
+          <div className="flex items-center gap-4">
+            <Link
+              to={"/"}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium px-5 py-2.5 rounded-md transition-all hover:shadow-[0_0_15px_rgba(36,150,237,0.4)]"
+            >
+              Go Back
+            </Link>
           </div>
         </div>
       </nav>

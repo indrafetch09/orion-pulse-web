@@ -23,7 +23,10 @@ export default function Navbar() {
                 <Link to="/docs">Docs</Link>
               </li>
               <li className="hover:text-foreground transition-colors cursor-pointer">
-                <a href="https://github.com/indrafetch09/orion-pulse-web/" className="flex items-center gap-1">
+                <a
+                  href="https://github.com/indrafetch09/orion-pulse-web/"
+                  className="flex items-center gap-1"
+                >
                   <Code className="w-4 h-4" /> Github
                 </a>
               </li>
