@@ -1,6 +1,7 @@
 import { Link } from "react-router";
-import { Activity, Code } from "lucide-react";
+import { Code } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
+import orionLogo from "@/assets/orionpulse_outline.svg";
 
 export default function Navbar() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -10,10 +11,10 @@ export default function Navbar() {
       {/* Navbar */}
       <nav className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 lg:px-12 py-4 bg-background/70 backdrop-blur-md border-b border-border">
         <div className="flex items-center gap-2 font-bold text-xl tracking-tight text-white cursor-pointer transition-opacity">
-          <Activity className="text-primary w-6 h-6" />
-          <span className="text-lg">
-            <Link to="/">Orionpulse</Link>
-          </span>
+          <Link to="/" className="flex items-center gap-2 text-lg">
+            <img className="h-8 w-8 " src={orionLogo} alt="Orionpulse logo" />
+            <span>Orionpulse</span>
+          </Link>
           <div className="ml-12">
             <ul className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
               <li className="hover:text-foreground transition-colors cursor-pointer">

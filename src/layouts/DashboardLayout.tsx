@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import {
-  Activity,
   LayoutDashboard,
   Network,
   ScrollText,
@@ -13,6 +12,7 @@ import {
   ChevronLeft,
   User,
 } from "lucide-react";
+import orionLogo from "@/assets/orionpulse_outline.svg";
 import { cn } from "@/lib/utils";
 import { Sheet } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -57,9 +57,11 @@ function SidebarContent({
     <div className="flex h-full flex-col">
       {/* Branding */}
       <div className="flex items-center gap-3 px-4 py-6">
-        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary">
-          <Activity className="h-5 w-5 text-white" />
-        </div>
+        <img
+          src={orionLogo}
+          className="h-8 w-8 shrink-0"
+          alt="Orionpulse logo"
+        />
         {!collapsed && (
           <div className="flex items-center gap-2 overflow-hidden">
             <span className="text-lg font-bold tracking-tight text-foreground whitespace-nowrap">
