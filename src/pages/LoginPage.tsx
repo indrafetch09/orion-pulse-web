@@ -41,11 +41,13 @@ export default function LoginPage() {
     try {
       if (isRegister) {
         await register(email, username, password);
-        navigate("/login", { replace: true });
+        setIsRegister(false); // ponytail: switch to sign in tab, preserves device_code query param
       } else {
         await login(email, password);
+        if (!deviceCode) {
+          navigate("/dashboard", { replace: true });
+        }
       }
-      navigate("/dashboard", { replace: true });
     } catch {
       // Error is set in the store
     }
@@ -83,7 +85,7 @@ export default function LoginPage() {
         </CardHeader>
 
         <CardContent>
-          {deviceCode ? (
+          {deviceCode && isAuthenticated ? (
             /* Device Authorization Flow */
             <div className="flex flex-col items-center gap-6 text-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
@@ -116,6 +118,12 @@ export default function LoginPage() {
           ) : (
             /* Login / Register Form */
             <form onSubmit={handleSubmit} className="space-y-4">
+              {deviceCode && (
+                <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-3 text-xs text-yellow-500 leading-relaxed text-center">
+                  ⚠️ Sign in first to authorize device code:{" "}
+                  <strong>{deviceCode}</strong>
+                </div>
+              )}
               {/* Toggle tabs */}
               <div className="flex rounded-lg border border-border bg-muted/30 p-1">
                 <button
