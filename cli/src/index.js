@@ -8,7 +8,8 @@ import { intro, outro, spinner, note, cancel, log } from "@clack/prompts";
 import axios from "axios";
 
 // ponytail: npm users need prod defaults, devs override with env var
-const BACKEND_URL = process.env.ORIONPULSE_API_URL || "";
+const BACKEND_URL =
+  process.env.ORIONPULSE_API_URL || "https://orionpulse.my.id/api";
 
 const program = new Command();
 

@@ -4,8 +4,9 @@ import open from "open";
 import { writeConfig } from "../services/config.js";
 
 // ponytail: npm users need prod defaults, devs override with env vars
-const BACKEND_URL = process.env.ORIONPULSE_API_URL || "";
-const FRONTEND_URL = process.env.ORIONPULSE_WEB_URL || "";
+const BACKEND_URL =
+  process.env.ORIONPULSE_API_URL || "https://orionpulse.my.id/api";
+const FRONTEND_URL = process.env.ORIONPULSE_WEB_URL || "https://orionpulse.my.id";
 
 export async function loginCommand() {
   intro(

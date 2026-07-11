@@ -6,8 +6,10 @@ import { readConfig, writeConfig } from "../services/config.js";
 import { probeLocalPort } from "../utils/ping.js";
 
 // ponytail: npm users need prod defaults, devs override with env vars
-const BACKEND_URL = process.env.ORIONPULSE_API_URL || "";
-const SOCKET_URL = process.env.ORIONPULSE_SOCKET_URL || "";
+const BACKEND_URL =
+  process.env.ORIONPULSE_API_URL || "https://orionpulse.my.id/api";
+const SOCKET_URL =
+  process.env.ORIONPULSE_SOCKET_URL || "https://orionpulse.my.id";
 
 const DEFAULT_PORTS = [22, 80, 443, 3000, 5173, 8080];
 
