@@ -97,7 +97,7 @@ export function Features() {
               <div className="p-5 font-mono text-sm space-y-3 text-foreground/90">
                 <p>
                   <span className="text-muted-foreground select-none">$ </span>
-                  npm install -g orionpulse-cli
+                  npm install -g orionpulse-cli@latest
                 </p>
                 <p>
                   <span className="text-muted-foreground select-none">$ </span>
