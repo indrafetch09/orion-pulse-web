@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router";
-import { Shield } from "lucide-react";
+import { useNavigate, useSearchParams, Link } from "react-router";
+import { Shield, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,6 +68,15 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
+      {/* Back to Home Button */}
+      <Link
+        to="/"
+        className="absolute top-6 left-6 flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group z-20"
+      >
+        <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+        Back
+      </Link>
+
       <Card className="relative z-10 w-full max-w-md glass-strong animate-fade-in">
         <CardHeader className="items-center text-center">
           <div className="mb-2 flex items-center gap-3">
