@@ -93,8 +93,9 @@ export async function analyzePortFailure(
   }
 
   const prompt = `
-You are Orionpulse AI, an expert Network Operations and Linux Systems Administrator.
+You are Orionpulse AI, an expert Network Operations and Linux, Windows, macOS Systems Administrator.
 Analyze a port monitoring failure event and generate troubleshooting instructions.
+Make it simple to understand.
 
 Port Checked: ${portNumber}
 Status: ${status}
@@ -103,21 +104,23 @@ Connection Error Message: "${errorMessage || "Connection refused / Timed out"}"
 Analyze why the service on port ${portNumber} might be offline or returning this status.
 Respond ONLY with a JSON object in this format:
 {
-"analysis": "A detailed explanation of why the service on port ${portNumber} might be down, taking the error message into account. Keep it concise but professional.",
+"analysis": "A simplified explanation of why the service on port ${portNumber} might be down, taking the error message into account. Keep it concise but professional and easy to understand.",
 "solution": "Step-by-step troubleshooting commands or configuration checks. Each step should be on a new line and start with a number. Use specific commands for common ports (e.g. systemctl, ufw, netstat).",
 "confidence": 95
 }
 `;
 
   try {
-    const genAI = new GoogleGenAI({ apiKey });
-    const model = await genAI.interactions.create({
-      model: "gemini-3.1-flash-lite",
-      input: `${prompt}`,
-      response_format: { type: "text", mime_type: "application/json" },
+    const ai = new GoogleGenAI({ apiKey });
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+      },
     });
 
-    const result = model.output_text;
+    const result = response.text;
     if (!result) {
       throw new Error("Failed to generate text");
     }
