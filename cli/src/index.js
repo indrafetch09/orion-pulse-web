@@ -18,7 +18,7 @@ program
   .description(
     "Welcome to Orionpulse, Your Local Agent Port Monitoring System.",
   )
-  .version("1.0.1");
+  .version("1.0.2", "-v, --version");
 
 // Login command: supports both dynamic token input and OAuth device code flow
 program
