@@ -51,6 +51,10 @@ function getFallbackSolution(
   return { analysis, solution, confidence };
 }
 
+// ponytail: limit concurrent live AI calls to prevent quota waste (e.g. if 50 ports fail at once)
+let activeAICallsCount = 0;
+const MAX_CONCURRENT_AI_CALLS = 3;
+
 export async function analyzePortFailure(
   portLogId: string,
   portNumber: number,
@@ -59,32 +63,13 @@ export async function analyzePortFailure(
 ): Promise<IAISolution> {
   const errorKey = generateErrorKey(portNumber, status, errorMessage);
 
-  // 1. Try to find a cached solution for the same port failure fingerprint
-  const existingSolution = await AISolution.findOne({ errorKey }).sort({
-    createdAt: -1,
-  });
-  if (existingSolution) {
-    // Return cached solution, marked as cached
-    return await AISolution.create({
-      portLogId,
-      portNumber,
-      analysis: existingSolution.analysis,
-      solution: existingSolution.solution,
-      confidence: existingSolution.confidence,
-      isFromCache: true,
-      errorKey,
-    });
-  }
-
-  // 2. Call Gemini API if API key is present
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    // No API key, use fallback
+  // 1. Concurrency Rate-Limiter (Checked immediately to prevent async race conditions)
+  if (activeAICallsCount >= MAX_CONCURRENT_AI_CALLS) {
     const fallback = getFallbackSolution(portNumber, status, errorMessage);
     return await AISolution.create({
       portLogId,
       portNumber,
-      analysis: fallback.analysis,
+      analysis: `[Rate-Limited] ${fallback.analysis}`,
       solution: fallback.solution,
       confidence: fallback.confidence,
       isFromCache: false,
@@ -92,7 +77,41 @@ export async function analyzePortFailure(
     });
   }
 
-  const prompt = `
+  activeAICallsCount++;
+  try {
+    // 2. Try to find a cached solution for the same port failure fingerprint
+    const existingSolution = await AISolution.findOne({ errorKey }).sort({
+      createdAt: -1,
+    });
+    if (existingSolution) {
+      // Return cached solution, marked as cached
+      return await AISolution.create({
+        portLogId,
+        portNumber,
+        analysis: existingSolution.analysis,
+        solution: existingSolution.solution,
+        confidence: existingSolution.confidence,
+        isFromCache: true,
+        errorKey,
+      });
+    }
+
+    // 3. Call Gemini API if API key is present
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      const fallback = getFallbackSolution(portNumber, status, errorMessage);
+      return await AISolution.create({
+        portLogId,
+        portNumber,
+        analysis: fallback.analysis,
+        solution: fallback.solution,
+        confidence: fallback.confidence,
+        isFromCache: false,
+        errorKey,
+      });
+    }
+
+    const prompt = `
 You are Orionpulse AI, an expert Network Operations and Linux, Windows, macOS Systems Administrator.
 Analyze a port monitoring failure event and generate troubleshooting instructions.
 Make it simple to understand.
@@ -110,7 +129,6 @@ Respond ONLY with a JSON object in this format:
 }
 `;
 
-  try {
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: "gemini-3.5-flash",
@@ -156,5 +174,7 @@ Respond ONLY with a JSON object in this format:
       isFromCache: false,
       errorKey,
     });
+  } finally {
+    activeAICallsCount--;
   }
 }
