@@ -1,9 +1,11 @@
 import { Link } from "react-router";
-import { Code } from "lucide-react";
+import { Code, Menu, X } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import orionLogo from "@/assets/orionpulse_outline.svg";
+import { useState } from "react";
 
 export default function Navbar() {
+  const [mobileOpen, setMobileOpen] = useState(false)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   return (
@@ -37,12 +39,54 @@ export default function Navbar() {
         <div className="flex items-center gap-4">
           <Link
             to={isAuthenticated ? "/dashboard" : "/login"}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium px-5 py-2.5 rounded-md transition-all hover:shadow-[0_0_15px_rgba(36,150,237,0.4)]"
+            className="hidden sm:inline-flex bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium px-5 py-2.5 rounded-md transition-all hover:shadow-[0_0_15px_rgba(36,150,237,0.4)]"
           >
             {isAuthenticated ? "Dashboard" : "Sign In"}
           </Link>
+
+          {/* Mobile Menu Toggler */}
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="md:hidden p-2 text-muted-foreground hover:text-white transition-colors focus:outline-none cursor-pointer"
+            aria-label="Toggle menu"
+          >
+            {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
       </nav>
+
+      {/* Mobile Menu Drawer */}
+      {mobileOpen && (
+        <div className="md:hidden fixed top-[69px] inset-x-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border p-6 animate-in slide-in-from-top duration-200">
+          <ul className="flex flex-col gap-4 text-base font-semibold text-muted-foreground">
+            <li className="hover:text-white transition-colors">
+              <Link to="/Features" onClick={() => setMobileOpen(false)}>Features</Link>
+            </li>
+            <li className="hover:text-white transition-colors">
+              <Link to="/docs" onClick={() => setMobileOpen(false)}>Docs</Link>
+            </li>
+            <li className="hover:text-white transition-colors">
+              <a
+                href="https://github.com/indrafetch09/orion-pulse-web/"
+                className="flex items-center gap-1.5"
+                onClick={() => setMobileOpen(false)}
+              >
+                <Code className="w-5 h-5" /> Github
+              </a>
+            </li>
+            <hr className="border-border my-2" />
+            <li>
+              <Link
+                to={isAuthenticated ? "/dashboard" : "/login"}
+                onClick={() => setMobileOpen(false)}
+                className="block text-center bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium px-5 py-3 rounded-md transition-all w-full"
+              >
+                {isAuthenticated ? "Dashboard" : "Sign In"}
+              </Link>
+            </li>
+          </ul>
+        </div>
+      )}
     </>
   );
 }
