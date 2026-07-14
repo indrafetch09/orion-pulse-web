@@ -56,7 +56,7 @@ function SidebarContent({
   return (
     <div className="flex h-full flex-col">
       {/* Branding */}
-      <div className="flex items-center gap-3 px-4 py-6">
+      <div className="flex items-center gap-3 px-6 py-6">
         <img
           src={orionLogo}
           className="h-8 w-8 shrink-0"
@@ -271,7 +271,7 @@ export default function DashboardLayout() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate("/settings")}>
+                <DropdownMenuItem onClick={() => navigate("/dashboard/settings")}>
                   <User className="h-4 w-4" />
                   Profile & Settings
                 </DropdownMenuItem>
