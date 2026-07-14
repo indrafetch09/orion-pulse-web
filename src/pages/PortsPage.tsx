@@ -5,6 +5,8 @@ import {
   Plus,
   Search,
   CheckCircle2Icon,
+  XCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useMonitorStore } from "@/stores/monitorStore";
 import { portsAPI } from "@/lib/api";
+import { useSocket } from "@/hooks/useSocket";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +24,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Alert, AlertTitle } from "@/components/ui/alert";
+
 
 const statusConfig = {
   open: { variant: "success" as const, label: "Open" },
@@ -32,6 +35,7 @@ const statusConfig = {
 const filters = ["All", "Open", "Closed", "Filtered"] as const;
 
 export default function PortsPage() {
+  const { isConnected } = useSocket();
   const {
     servers,
     ports,
@@ -53,7 +57,20 @@ export default function PortsPage() {
     label: "",
   });
   const [formError, setFormError] = useState("");
-  const [successAlert, setSuccessAlert] = useState(false);
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: "success" | "error" | "warning";
+  }>({ show: false, message: "", type: "success" });
+
+  const showToast = (message: string, type: "success" | "error" | "warning") => {
+    setToast({ show: true, message, type });
+    // Auto-dismiss after 4 seconds
+    const timer = setTimeout(() => {
+      setToast((prev) => ({ ...prev, show: false }));
+    }, 4000);
+    return () => clearTimeout(timer);
+  };
 
   // 1. Fetch servers on load
   useEffect(() => {
@@ -67,7 +84,7 @@ export default function PortsPage() {
     }
   }, [servers, selectedServerId, setSelectedServer]);
 
-  // 3. Fetch ports when selected server changes
+  // 3. Fetch ports when active server changes
   useEffect(() => {
     if (selectedServerId) {
       fetchPorts(selectedServerId);
@@ -84,9 +101,14 @@ export default function PortsPage() {
     return matchesFilter && matchesSearch;
   });
 
-  const handleAddPort = async () => {
+  const handleAddPort = async (e: React.FormEvent) => {
+    e.preventDefault();
     setFormError("");
-    if (!selectedServerId) return;
+
+    if (!selectedServerId) {
+      setFormError("Please select a server first");
+      return;
+    }
 
     if (!newPort.portNumber) {
       setFormError("Port Number is required");
@@ -112,10 +134,7 @@ export default function PortsPage() {
       });
       setDialogOpen(false);
       setNewPort({ portNumber: "", protocol: "TCP", label: "" });
-      setSuccessAlert(true);
-      setTimeout(() => {
-        setSuccessAlert(false);
-      }, 5000);
+      showToast("Port successfully added!", "success");
     } catch (err) {
       console.error(err);
       setFormError("Failed to add port. Please try again.");
@@ -123,13 +142,19 @@ export default function PortsPage() {
   };
 
   const handleScanPort = async (id: string) => {
+    if (!isConnected) {
+      showToast("Telemetry socket is offline. Cannot trigger scan.", "error");
+      return;
+    }
     setScanningId(id);
     try {
       await portsAPI.scan(id);
+      showToast("Port scan triggered successfully!", "success");
       // Briefly show scan active state, socket events will trigger data refresh
       setTimeout(() => setScanningId(null), 1000);
     } catch (err) {
       console.error("Failed to trigger instant scan", err);
+      showToast("Failed to trigger instant scan.", "error");
       setScanningId(null);
     }
   };
@@ -138,8 +163,10 @@ export default function PortsPage() {
     if (confirm("Are you sure you want to stop monitoring this port?")) {
       try {
         await removePort(id);
+        showToast("Port stopped monitoring.", "warning");
       } catch (err) {
         console.error("Failed to delete port", err);
+        showToast("Failed to stop monitoring port.", "error");
       }
     }
   };
@@ -296,14 +323,21 @@ export default function PortsPage() {
         })}
       </div>
 
-      {/*Alert */}
-      {successAlert && (
-        <Alert className="fixed bottom-6 right-6 z-[9999] bg-[var(--color-success)] text-background border-none max-w-xs w-full h-12 flex items-center justify-center gap-2 animate-toast">
-          <CheckCircle2Icon className="w-5 h-5" />
-          <AlertTitle className="m-0 text-sm font-medium">
-            Port successfully added!
-          </AlertTitle>
-        </Alert>
+      {/* Toast Notification */}
+      {toast.show && (
+        <div
+          className={cn(
+            "fixed bottom-6 right-6 z-[9999] flex items-center gap-3 px-5 py-3 rounded-lg border shadow-xl backdrop-blur-md transition-all duration-300 animate-toast",
+            toast.type === "success" && "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+            toast.type === "error" && "bg-rose-500/10 border-rose-500/20 text-rose-400",
+            toast.type === "warning" && "bg-amber-500/10 border-amber-500/20 text-amber-400"
+          )}
+        >
+          {toast.type === "success" && <CheckCircle2Icon className="h-5 w-5 shrink-0" />}
+          {toast.type === "error" && <XCircle className="h-5 w-5 shrink-0" />}
+          {toast.type === "warning" && <AlertTriangle className="h-5 w-5 shrink-0" />}
+          <span className="text-sm font-semibold">{toast.message}</span>
+        </div>
       )}
       {filteredPorts.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
