@@ -3,10 +3,13 @@ import axios from "axios";
 import open from "open";
 import { writeConfig } from "../services/config.js";
 
-// ponytail: npm users need prod defaults, devs override with env vars
+const isDev = process.argv.includes("--dev") || process.argv.includes("-d");
 const BACKEND_URL =
-  process.env.ORIONPULSE_API_URL || "https://orionpulse.my.id/api";
-const FRONTEND_URL = process.env.ORIONPULSE_WEB_URL || "https://orionpulse.my.id";
+  process.env.ORIONPULSE_API_URL ||
+  (isDev ? "http://localhost:8080/api" : "https://orionpulse.my.id/api");
+const FRONTEND_URL =
+  process.env.ORIONPULSE_WEB_URL ||
+  (isDev ? "http://localhost:8080" : "https://orionpulse.my.id");
 
 export async function loginCommand() {
   intro(

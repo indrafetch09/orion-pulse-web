@@ -7,9 +7,10 @@ import { writeConfig, readConfig, clearConfig } from "./services/config.js";
 import { intro, outro, spinner, note, cancel, log } from "@clack/prompts";
 import axios from "axios";
 
-// ponytail: npm users need prod defaults, devs override with env var
+const isDev = process.argv.includes("--dev") || process.argv.includes("-d");
 const BACKEND_URL =
-  process.env.ORIONPULSE_API_URL || "https://orionpulse.my.id/api";
+  process.env.ORIONPULSE_API_URL ||
+  (isDev ? "http://localhost:8080/api" : "https://orionpulse.my.id/api");
 
 const program = new Command();
 
@@ -18,7 +19,8 @@ program
   .description(
     "Welcome to Orionpulse, Your Local Agent Port Monitoring System.",
   )
-  .version("1.0.2", "-v, --version");
+  .version("1.0.2", "-v, --version")
+  .option("-d, --dev", "Run in development mode (targets localhost:8080)");
 
 // Login command: supports both dynamic token input and OAuth device code flow
 program
